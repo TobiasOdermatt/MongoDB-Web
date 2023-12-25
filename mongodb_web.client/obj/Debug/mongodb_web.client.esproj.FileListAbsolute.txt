@@ -1,0 +1,2 @@
+C:\Users\Tobias\Desktop\GitHub\MongoDB Management\src\mongodb_web.client\obj\Debug\mongodb_web.client.esproj.CoreCompileInputs.cache
+C:\Users\Tobias\Desktop\GitHub\MongoDB-Web\src\mongodb_web.client\obj\Debug\mongodb_web.client.esproj.CoreCompileInputs.cache
