@@ -13,7 +13,7 @@ namespace mongodbweb.Server.Tests;
 
 public static class TestSetup
 {
-    private const string ConnectionString = "mongodb://user:hallo1234@localhost:27017/?authSource=admin";
+    private const string ConnectionString = "";
     private const string DbHost = "localhost";
     private const string DbPort = "27017";
     private const string DbRules = "?authSource=admin";
