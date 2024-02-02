@@ -33,10 +33,10 @@ jobs:
         dotnet-version: 8.0.x
 
     - name: Restore dependencies
-      run: dotnet restore MongoDB_Web.sln
+      run: dotnet restore mongodbweb.sln
 
     - name: Build
-      run: dotnet build MongoDB_Web.sln --no-restore
+      run: dotnet build mongodbweb.sln --no-restore
 
     - name: Test
       run: |
