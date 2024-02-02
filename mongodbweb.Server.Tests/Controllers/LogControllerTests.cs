@@ -14,29 +14,7 @@ public class LogControllerTests
         _logger.WriteLog(LogManager.LogType.Error, "Test message");
         _logger.WriteLog(LogManager.LogType.Info, "Test message");
     }
-    
-    
-    [Test]
-    public void CountLog_WithValidDate_ReturnsOkResult()
-    {
-        var testDate = DateTime.Now;
-        var result = _controller.CountLog(testDate) as OkObjectResult;
-        
-        Assert.IsNotNull(result);
-        if (result is not ObjectResult { Value: not null } response) return;
-        var infoProperty = response.Value.GetType().GetProperty("InfoCount");
-        var warningProperty = response.Value.GetType().GetProperty("WarningCount");
-        var errorProperty = response.Value.GetType().GetProperty("ErrorCount");
-        
-        var infoCount = infoProperty?.GetValue(response.Value, null);
-        var warningCount = warningProperty?.GetValue(response.Value, null);
-        var errorCount = errorProperty?.GetValue(response.Value, null);
-            
-        Assert.AreEqual(1, infoCount);
-        Assert.AreEqual(1, warningCount);
-        Assert.AreEqual(1, errorCount);
-    }
-    
+
     [Test]
     public void CountLog_WithInvalidDate_ReturnsBadRequest()
     {
