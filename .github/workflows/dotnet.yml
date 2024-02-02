@@ -41,4 +41,4 @@ jobs:
     - name: Test
       run: |
         export MONGODB_CONNECTION_STRING="mongodb://user:your-pwd@localhost:27017"
-        dotnet test MongoDB_Web.sln --no-build --verbosity normal
+        dotnet test mongodbweb.sln --no-build --verbosity normal
