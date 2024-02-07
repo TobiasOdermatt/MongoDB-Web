@@ -1,6 +1,0 @@
-@mongodbweb.Server_HostAddress = http://localhost:5291
-
-GET {{mongodbweb.Server_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

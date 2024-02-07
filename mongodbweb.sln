@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mongodbweb.Server", "mongodbweb.Server\mongodbweb.Server.csproj", "{1060AACC-482B-4DA6-B2FC-048365CDE4FA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "api", "api\api.csproj", "{1060AACC-482B-4DA6-B2FC-048365CDE4FA}"
 EndProject
-Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "mongodbweb.client", "mongodbweb.client\mongodbweb.client.esproj", "{38803597-E8E7-414D-B0FE-0814711BFB00}"
+Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "mongodbweb-app", "mongodbweb-app\mongodbweb-app.esproj", "{38803597-E8E7-414D-B0FE-0814711BFB00}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mongodbweb.Server.Tests", "mongodbweb.Server.Tests\mongodbweb.Server.Tests.csproj", "{3DA38B09-DA9E-41F7-92D4-CF01803D41C8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "api.Tests", "api.Tests\api.Tests.csproj", "{3DA38B09-DA9E-41F7-92D4-CF01803D41C8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

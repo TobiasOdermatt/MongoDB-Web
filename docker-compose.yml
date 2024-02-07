@@ -1,0 +1,22 @@
+version: '3.8'
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    ports:
+      - "5010:5010"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - mongodbweb-app
+    container_name: api
+
+
+  mongodbweb-app:
+    build:
+      context: ./mongodbweb-app
+      dockerfile: Dockerfile
+    ports:
+      - "4200:4200"
+    container_name: app
