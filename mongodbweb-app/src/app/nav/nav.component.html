@@ -1,0 +1,52 @@
+<div class="sidebar">
+  <div class="navbar navbar-dark">
+    <div class="container-fluid pb-1 ps-5">
+      <a class="navbar-brand">MongoDB Web</a>
+      <button title="Navigation menu" class="navbar-toggler" (click)="Collapse()">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+    </div>
+  </div>
+
+  <div class="collapse-nav" style="display: block;" *ngIf="showNav">
+    <nav class="flex-column">
+      <div class="nav-item px-3">
+        <a href="/" class="nav-link active">
+          <div class="icon blacktowhite" [innerHTML]="svgIcons['home']"></div> Home
+        </a>
+      </div>
+      <ng-container *ngIf="isAuthorized || isCookieSet">
+        <div class="nav-item px-3" *ngIf="isAdmin">
+          <a href="Query" class="nav-link">
+            <div class="icon" [innerHTML]="svgIcons['query']"></div> Query
+          </a>
+        </div>
+        <div class="nav-item px-3">
+          <a href="Statistic" class="nav-link">
+            <div class="icon blacktowhite" [innerHTML]="svgIcons['pie_chart']"></div> Statistic
+          </a>
+        </div>
+        <div class="nav-item px-3" *ngIf="isAdmin">
+          <a href="User_session_control" class="nav-link">
+            <div class="icon blacktowhite" [innerHTML]="svgIcons['user_control']"></div> User session control
+          </a>
+        </div>
+        <div class="nav-item px-3" *ngIf="isAdmin">
+          <a href="Access_log" class="nav-link">
+            <div class="icon blacktowhite" [innerHTML]="svgIcons['security']"></div> Access Log
+          </a>
+        </div>
+        <div class="nav-item px-3">
+          <a href="Settings" class="nav-link">
+            <div class="icon blacktowhite" [innerHTML]="svgIcons['settings']"></div> Settings
+          </a>
+        </div>
+        <div class="nav-item px-3">
+          <a href="api/Auth/Logout" class="nav-link">
+            <div class="icon blacktowhite" [innerHTML]="svgIcons['logout']"></div> Logout
+          </a>
+        </div>
+      </ng-container>
+    </nav>
+  </div>
+</div>
