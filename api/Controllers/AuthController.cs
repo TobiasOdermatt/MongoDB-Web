@@ -38,7 +38,7 @@ namespace mongodbweb.Server.Controllers
             var localDate = DateTime.Now;
             OtpFileObject newFile = new(Guid.Parse(uuid), localDate, randData, ipOfRequest, false, dataJson.Username);
 
-            OtpFileManagement.WriteOtpFile(uuid, newFile);
+            OtpMemoryManagement.WriteOtpFile(uuid, newFile);
 
             _logger.WriteLog(LogType.Info, "OTP file created for user: " + dataJson.Username + " with UUID " + uuid + " IP: " + ipOfRequest);
 
@@ -53,7 +53,7 @@ namespace mongodbweb.Server.Controllers
             if (uuidString is null || !Guid.TryParse(uuidString, out var uuid))
                 return Redirect("/Connect");
 
-            OtpFileManagement.DeleteOtpFile(uuid.ToString());
+            OtpMemoryManagement.DeleteOtpFile(uuid.ToString());
 
             HttpContext.Response.Cookies.Delete("UUID");
             HttpContext.Response.Cookies.Delete("Token");

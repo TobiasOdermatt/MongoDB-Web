@@ -56,7 +56,7 @@ namespace mongodbweb.Server.Filters
             
             _uuid = uuid;
             
-            var otpFile = OtpFileManagement.ReadOtpFile(uuid);
+            var otpFile = OtpMemoryManagement.ReadOtpFile(uuid);
 
             if (otpFile is null)
                 return false;

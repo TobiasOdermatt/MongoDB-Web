@@ -8,6 +8,7 @@ using Microsoft.Extensions.Primitives;
 using mongodbweb.Server.Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using Amazon.Runtime.Internal.Transform;
 
 namespace mongodbweb.Server.Tests;
 
@@ -48,6 +49,7 @@ public static class TestSetup
             {"DBPort", DbPort},
             {"DBRule", DbRules},
             {"CustomConnectionString", ""},
+            {"DeleteOtpInDays", "1" },
             {"AllowedIP", AllowedIp}
         };
 
