@@ -23,6 +23,10 @@
   --danger-background: #f1d0d0;
 }
 
+.page {
+  background-color: var(--background) !important;
+  color: var(--font-color) !important;
+}
 
 .dark-mode {
   background-color: var(--background) !important;
@@ -31,5 +35,16 @@
 
 .light-mode{
   background-color: var(--background) !important;
+  color: var(--font-color) !important;
+}
+
+.btn-primary {
+  color: #fff;
+  background-color: #223b4f;
+  border-color: #152f4b;
+}
+
+html, body {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   color: var(--font-color) !important;
 }

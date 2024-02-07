@@ -7,11 +7,11 @@ import { DatabaseListResponse } from '../models/DatabaseListResponse.interface';
 @Injectable({
   providedIn: 'root'
 })
-export class DatabaseListService {
+export class DatabaseService {
   constructor(private http: HttpClient) { }
 
-  getListDb(): Observable<DatabaseListResponse> {
-    return this.http.get<DatabaseListResponse>(`api/Db/listDB`)
+  getListDb(): Observable<any> {
+    return this.http.get<any>(`api/Db/listDB`)
       .pipe(
         catchError((error: HttpErrorResponse) => {
           console.error('Error fetching database list', error);
@@ -20,4 +20,17 @@ export class DatabaseListService {
       );
   }
   
+  getDatabaseStatistics(dbName: string): Observable<any> {
+    if (!dbName) {
+      console.error('Database name is required.');
+      return of(null);
+    }
+    return this.http.get(`api/Db/databaseStatistics/${dbName}`)
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          console.error(`Error fetching statistics for database '${dbName}'`, error);
+          return of(null);
+        })
+      );
+  }
 }

@@ -1,11 +1,11 @@
 <form id="connect" (submit)="validate()">
   <div class="form-group py-1">
     <label for="username">Username</label>
-    <input type="text" id="username" name="username" class="form-control page" placeholder="Username (optional)" [(ngModel)]="username">
+    <input type="text" id="username" name="username" class="form-control page" placeholder="Username" [(ngModel)]="username">
   </div>
   <div class="form-group py-1">
     <label for="password">Password</label>
-    <input type="password" id="password" name="password" class="form-control page" placeholder="Password (optional)" [(ngModel)]="password">
+    <input type="password" id="password" name="password" class="form-control page" placeholder="Password" [(ngModel)]="password">
   </div>
   <br>
   <button type="submit" class="btn btn-primary">Save Connection</button>
