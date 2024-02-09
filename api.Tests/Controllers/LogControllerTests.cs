@@ -19,10 +19,10 @@ public class LogControllerTests
     public void CountLog_WithInvalidDate_ReturnsBadRequest()
     {
         var result = _controller.CountLog(DateTime.MinValue) as BadRequestObjectResult;
-        Assert.IsNotNull(result);
+        Assert.That(result, Is.Not.Null);
         
         if (result is not { Value: not null }) return;
-        Assert.AreEqual("Invalid or missing date parameter.", result.Value);
+        Assert.That(result.Value, Is.EqualTo("Invalid or missing date parameter."));
     }
     
 

@@ -24,7 +24,7 @@ namespace mongodbweb.Server.Tests.Helpers
             var filter = new BsonDocument("name", collectionName);
             var collections = database.ListCollections(new ListCollectionsOptions { Filter = filter });
             var exists = collections.Any();
-            Assert.IsTrue(exists, "Test collection was not created.");
+            Assert.That(exists, Is.True, "Test collection was not created.");
 
             client.DropDatabase("UnitTestDb");
         }

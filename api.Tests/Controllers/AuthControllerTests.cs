@@ -38,7 +38,7 @@ namespace mongodbweb.Server.Tests.Controllers
 
             var validCredentials = new ConnectRequestObject { Username = _usernameFromTestConfiguration, Password = _passwordFromTestConfiguration };
             var result = _controller.CreateOtp(validCredentials) as JsonResult;
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
         }
         
         [Test]
@@ -54,7 +54,7 @@ namespace mongodbweb.Server.Tests.Controllers
 
             var validCredentials = new ConnectRequestObject { Username = _usernameFromTestConfiguration, Password = _passwordFromTestConfiguration };
             var result = _controller.CreateOtp(validCredentials) as JsonResult;
-            Assert.IsNull(result);
+            Assert.That(result, Is.Null);
         }
         
         [Test]
@@ -69,7 +69,7 @@ namespace mongodbweb.Server.Tests.Controllers
 
             var validCredentials = new ConnectRequestObject { Username = _usernameFromTestConfiguration, Password = _passwordFromTestConfiguration };
             var result = _controller.CreateOtp(validCredentials) as JsonResult;
-            Assert.IsNull(result);
+            Assert.That(result, Is.Null);
         }
 
         
@@ -86,7 +86,7 @@ namespace mongodbweb.Server.Tests.Controllers
 
             var validCredentials = new ConnectRequestObject { Username = "INVALID_USERNAME", Password = "INVALID_PASSWORD" };
             var result = _controller.CreateOtp(validCredentials) as JsonResult;
-            Assert.IsNull(result);
+            Assert.That(result, Is.Null);
         }
 
         [Test]
@@ -99,8 +99,8 @@ namespace mongodbweb.Server.Tests.Controllers
             };
             var result = _controller.Logout() as RedirectResult;
             
-            Assert.IsNotNull(result);
-            Assert.AreEqual("/Connect", result?.Url);
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result?.Url, Is.EqualTo("/Connect"));
         }
         
         [Test]
@@ -116,15 +116,17 @@ namespace mongodbweb.Server.Tests.Controllers
 
             var result = _controller.Logout() as RedirectResult;
             
-            Assert.IsNotNull(result);
-            Assert.AreEqual("/Connect", result?.Url);
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result?.Url, Is.EqualTo("/Connect"));
             
             var responseCookies = context.Response.Headers["Set-Cookie"].ToString();
-            Assert.IsFalse(responseCookies.Contains("UUID=;"));
-            Assert.IsFalse(responseCookies.Contains("Token=;"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(responseCookies.Contains("UUID=;"), Is.False);
+                Assert.That(responseCookies.Contains("Token=;"), Is.False);
+            });
         }
 
-                
         [Test]
         public void Logout_Removes_Token_And_Valid_UUID_Cookies_And_Redirects()
         {
@@ -138,12 +140,15 @@ namespace mongodbweb.Server.Tests.Controllers
 
             var result = _controller.Logout() as RedirectResult;
             
-            Assert.IsNotNull(result);
-            Assert.AreEqual("/Connect", result?.Url);
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result?.Url, Is.EqualTo("/Connect"));
             
             var responseCookies = context.Response.Headers["Set-Cookie"].ToString();
-            Assert.IsTrue(responseCookies.Contains("UUID=;"));
-            Assert.IsTrue(responseCookies.Contains("Token=;"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(responseCookies.Contains("UUID=;"), Is.True);
+                Assert.That(responseCookies.Contains("Token=;"), Is.True);
+            });
         }
     }
 }

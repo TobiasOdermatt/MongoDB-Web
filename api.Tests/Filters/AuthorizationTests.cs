@@ -52,6 +52,6 @@ public class AuthorizationTests
         }
 
         await authorizationFilter.OnActionExecutionAsync(actionExecutingContext, Next);
-        Assert.IsNotNull(actionExecutingContext.Result, "User is authorized when should not be");
+        Assert.That(actionExecutingContext.Result, Is.Not.Null, "User is authorized when should not be");
     }
 }
