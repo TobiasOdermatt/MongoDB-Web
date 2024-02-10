@@ -40,7 +40,7 @@ namespace mongodbweb.Server.Controllers
 
             OtpMemoryManagement.WriteOtpFile(uuid, newFile);
 
-            _logger.WriteLog(LogType.Info, "OTP file created for user: " + dataJson.Username + " with UUID " + uuid + " IP: " + ipOfRequest);
+            _logger.WriteLog(LogType.Info, "OTP created for user: " + dataJson.Username + " with UUID " + uuid + " IP: " + ipOfRequest);
 
             var responseAuth = GenerateAuthResponse(uuid, token);
             return new JsonResult(responseAuth);
@@ -53,7 +53,7 @@ namespace mongodbweb.Server.Controllers
             if (uuidString is null || !Guid.TryParse(uuidString, out var uuid))
                 return Redirect("/Connect");
 
-            OtpMemoryManagement.DeleteOtpFile(uuid.ToString());
+            OtpMemoryManagement.DeleteOtp(uuid.ToString());
 
             HttpContext.Response.Cookies.Delete("UUID");
             HttpContext.Response.Cookies.Delete("Token");

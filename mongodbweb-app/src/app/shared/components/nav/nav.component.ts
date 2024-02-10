@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { EnvService } from "../shared/service/env.service";
+import { EnvService } from "../../service/env.service";
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
@@ -12,7 +12,6 @@ export class NavComponent implements OnInit {
   showNav = true;
   isAdmin = false;
   isAuthorized = false;
-  isCookieSet = false;
 
   svgIcons: { [key: string]: SafeHtml } = {};
 
@@ -28,7 +27,6 @@ export class NavComponent implements OnInit {
   }
 
   checkAuthorization() {
-    this.isCookieSet = this.envService.isCookieSet();
     this.envService.isAuthorized$.subscribe((isAuthorized: any) => {
       this.isAuthorized = isAuthorized;
       this.envService.isAdmin().subscribe(isAdmin => {

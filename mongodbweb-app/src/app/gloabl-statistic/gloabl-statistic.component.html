@@ -1,0 +1,21 @@
+<h3>Global Statistics</h3>
+
+<div *ngIf="stats; else loading">
+  <table>
+    <thead>
+      <tr>
+        <th>Field</th>
+        <th>Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let stat of stats | keyvalue">
+        <td class="page">{{ stat.key }}</td>
+        <td [innerHTML]="displayElement(stat.value)"></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<ng-template #loading>
+  <p>Failed to fetch statistics.</p>
+</ng-template>

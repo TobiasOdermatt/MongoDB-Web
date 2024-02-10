@@ -1,41 +1,46 @@
 <div class="top-div">
-    <h3>List of all databases</h3>
-    <p class="second-text-color">{{numberOfDBs}} Databases found</p>
-    <button type="button" class="btn btn-primary float-end ms-3">Create database</button>
-    <button type="button" class="btn btn-primary float-end">Import</button>
+  <h3>List of all databases</h3>
+  <p class="second-text-color">{{numberOfDBs}} Databases found</p>
+  <button type="button" class="btn btn-primary float-end ms-3" (click)="openModal(createCollectionModal)">Create database</button>
+  <button type="button" class="btn btn-primary float-end">Import</button>
+</div>
+<br>
+
+<div class="row mt-4">
+  <div *ngFor="let db of databaseList" class="col-lg-4 col-xl-3 col-md-5 mb-8 col-sm-12 py-3">
+    <app-db-card [db]="db" (downloadRequest)="handleDownloadRequest($event)"></app-db-card>
   </div>
-  <br>
-  
-  <div class="row mt-4">
-    <div *ngFor="let db of databaseList" class="col-lg-4 col-xl-3 col-md-5 mb-8 col-sm-12 py-3">
-      <div class="shadow card h-100 rounded cardbox">
-        <div class="card-header py-1 danger-background">
-          <div class="card-title">
-            <h4 class="title-card">{{db['name']}}</h4>
-          </div>
-          <button type="button" class=" btn-close deleteicon blacktowhitetheme" aria-label="Close"></button>
-        </div>
-        <div class="card-body">
-          <p class="card-text" *ngIf="getStatsForDb(db['name']) as stats">
-            Size on disk: {{db['sizeOnDisk'] | number}} KB <br>
-            Collections: {{stats.collections | number}} <br>
-            Objects: {{stats.objects | number}} <br>
-            Indexes: {{stats.indexes | number}}
-          </p>
-        </div>
-        <div class="card-footer d-flex justify-content-between align-items-center">
-          <div class="btn-group">
-            <button type="button" class="btn btn-success actionbutton dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-              Option
-            </button>
-            <ul class="dropdown-menu element-background">
-              <li><a class="dropdown-item element-background" href="">Details DB</a></li>
-              <li><a class="dropdown-item element-background" href="">Copy DB</a></li>
-              <li><a class="dropdown-item element-background" href="">Download DB</a></li>
-            </ul>
-          </div>
-          <a href="CollectionManager/{{db['name']}}" class="btn actionbutton btn-primary">Open</a>
-        </div>
-      </div>
+</div>
+
+<ng-template #createCollectionModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">Create new collection</h5>
+    <button type="button" class="close btn-close blacktowhitetheme" (click)="modal.dismiss('Cross click')" data-dismiss="modal" aria-label="Close"></button>
+  </div>
+  <div class="modal-body">
+    <p> Please type the database name</p>
+    <input type="text" class="form-control page" placeholder="database name" required [(ngModel)]="newDbName">
+    <br>
+    <p> Please type the collection name</p>
+    <input type="text" class="form-control page" placeholder="collection name" required [(ngModel)]="newCollectionName">
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-success" (click)="createCollection()" [disabled]="newDbName===''||newCollectionName===''">Create collection</button>
+  </div>
+</ng-template>
+
+<ng-template #downloadModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">Download</h5>
+    <button type="button" class="close btn-close blacktowhitetheme" (click)="modal.dismiss('Cross click')" data-dismiss="modal" aria-label="Close"></button>
+  </div>
+  <div class="modal-body">
+    <div class="progress">
+      <div class="progress-bar" role="progressbar" [style.width]="(downloadInformation?.progress || 0) + '%'" [attr.aria-valuenow]="downloadInformation?.progress" aria-valuemin="0" aria-valuemax="100"></div>
     </div>
+    <p>{{downloadInformation?.processedCollections}} / {{downloadInformation?.totalCollections}} collections</p>
+    <p>Preparing the database for download...</p>
+    <p>Please wait, don't leave this site.</p>
   </div>
+</ng-template>
+

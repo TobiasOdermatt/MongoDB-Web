@@ -1,0 +1,20 @@
+
+.cardbox {
+  border: 1px dashed var(--secound-color);
+  background-color: var(--fifth-color);
+  color: var(--font-color) !important;
+}
+
+.card-header {
+  border-bottom: 1px solid var(--secound-color);
+  background-color: var(--third-color);
+}
+
+.card-body {
+  font-size: 0.95rem;
+}
+
+::placeholder {
+  color: var(--secound-text-color);
+}
+

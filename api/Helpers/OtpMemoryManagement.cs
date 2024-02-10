@@ -16,9 +16,9 @@ namespace mongodbweb.Server.Helpers
             OtpStore[uuid] = data;
         }
 
-        public static OtpFileObject? ReadOtpFile(string uuid)
+        public static OtpFileObject? ReadOtp(string uuid)
         {
-            CleanUpOtpFiles();
+            CleanUpOtp();
 
             if (OtpStore.TryGetValue(uuid, out var otpFile))
             {
@@ -28,7 +28,7 @@ namespace mongodbweb.Server.Helpers
             return null;
         }
 
-        public static void DeleteOtpFile(string? uuid)
+        public static void DeleteOtp(string? uuid)
         {
             if (uuid is null)
                 return;
@@ -36,11 +36,11 @@ namespace mongodbweb.Server.Helpers
             if (OtpStore.ContainsKey(uuid))
             {
                 OtpStore.Remove(uuid);
-                Logger.WriteLog(LogType.Info, "Deleted OTP file Logout: " + uuid);
+                Logger.WriteLog(LogType.Info, "Deleted OTP Logout: " + uuid);
             }
         }
 
-        private static void CleanUpOtpFiles()
+        private static void CleanUpOtp()
         {
             if ((DateTime.Now - LastCleanupTime).Days < CleanupFreshRateInDay)
                 return;
@@ -51,13 +51,13 @@ namespace mongodbweb.Server.Helpers
             foreach (var key in expiredKeys)
             {
                 OtpStore.Remove(key);
-                Logger.WriteLog(LogType.Info, $"The OTP file {key} was deleted because it was older than {ConfigManager.deleteOtpInDays} days");
+                Logger.WriteLog(LogType.Info, $"The OTP {key} was deleted because it was older than {ConfigManager.deleteOtpInDays} days");
             }
 
             LastCleanupTime = DateTime.Now;
         }
 
-        public static List<OtpFileObject> GetAllOtpFiles()
+        public static List<OtpFileObject> GetAllOtp()
         {
             return OtpStore.Values.Where(otp => otp.Expire >= DateTime.Now).ToList();
         }

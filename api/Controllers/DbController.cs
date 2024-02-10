@@ -5,6 +5,8 @@ using mongodbweb.Server.Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Newtonsoft.Json.Linq;
+using api.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
 namespace mongodbweb.Server.Controllers
 {
@@ -15,9 +17,9 @@ namespace mongodbweb.Server.Controllers
     {
         public readonly MongoDbOperations mongoDbOperations;
 
-        public DbController()
+        public DbController(IHubContext<ProgressHub> hubContext)
         {
-            mongoDbOperations = new MongoDbOperations { client = new MongoClient("mongodb://invalid:27017") };
+            mongoDbOperations = new MongoDbOperations(hubContext) { client = new MongoClient("mongodb://invalid:27017") };
         }
 
         [HttpGet("listDB")]
@@ -346,6 +348,53 @@ namespace mongodbweb.Server.Controllers
 
             return Ok($"Document with ID '{id}' updated successfully in collection '{collectionName}' of database '{dbName}'.");
         }
+
+        [HttpGet("prepareDatabaseDownload/{dbName}/{downloadGuid}")]
+        public async Task<IActionResult> PrepareDatabaseDownload(string dbName, Guid downloadGuid)
+        {
+            if (string.IsNullOrEmpty(dbName))
+                return BadRequest("Database name is required.");
+
+            if (downloadGuid == Guid.Empty)
+                return BadRequest("Valid download GUID is required.");
+
+            var fileName = $"db-{dbName}-{downloadGuid.ToString()[^4..]}.json";
+            var filePath = $"UserStorage/download/{mongoDbOperations.uuid}/{fileName}";
+
+            try
+            {
+                var directory = Path.GetDirectoryName(filePath);
+                if (directory == null)
+                    return StatusCode(500, "The path for the directory could not be determined.");
+
+                if (!Directory.Exists(directory))
+                    Directory.CreateDirectory(directory);
+                try
+                {
+                    using (var fileStream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
+                    {
+                        fileStream.Close();
+                    }
+
+                    using (var streamWriter = new StreamWriter(filePath))
+                    {
+                        await mongoDbOperations.StreamAllCollectionExport(streamWriter, dbName, downloadGuid);
+                    }
+
+                    return Ok(fileName);
+                }
+                catch (IOException)
+                {
+                    return StatusCode(500, "The file is currently in use. Please try again later.");
+                }
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Failed to initiate database download.");
+            }
+        }
+
+
 
     }
 }

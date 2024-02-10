@@ -1,6 +1,10 @@
-﻿using MongoDB.Bson;
+﻿using api.Hubs;
+using Microsoft.AspNetCore.SignalR;
+using MongoDB.Bson;
+using MongoDB.Bson.IO;
 using MongoDB.Driver;
 using Newtonsoft.Json.Linq;
+using System;
 using static mongodbweb.Server.Helpers.LogManager;
 
 namespace mongodbweb.Server.Helpers
@@ -12,6 +16,13 @@ namespace mongodbweb.Server.Helpers
         public string username = "";
         public string uuid = "";
 
+        public readonly IHubContext<ProgressHub>? _hubContext;
+
+        public MongoDbOperations(IHubContext<ProgressHub>? hubContext)
+        {
+            _hubContext = hubContext;
+        }
+
 
         /// <summary>
         /// List every database from mongo
@@ -19,6 +30,7 @@ namespace mongodbweb.Server.Helpers
         /// <returns>Returns List of <BsonDocument/></returns>
         public List<BsonDocument>? ListAllDatabases()
         {
+            _hubContext!.Clients.All.SendAsync("ReceiveProgressDatabase", 4);
             List<BsonDocument>? dbList;
             try
             {
@@ -383,7 +395,7 @@ namespace mongodbweb.Server.Helpers
             }
             catch (Exception e)
             {
-                var _ = new LogManager(LogType.Error, "User: " + username + " failed to fetch statistics for collection: " + collectionName, e);
+                _logger.WriteLog(LogType.Error, "User: " + username + " failed to fetch statistics for collection: " + collectionName, e);
                 return null;
             }
         }
@@ -517,7 +529,77 @@ namespace mongodbweb.Server.Helpers
 
             return result;
         }
-        
+
+        /// <summary>
+        /// Get all collections from a Database, the return has every data from every collection in the DB
+        /// </summary>
+        /// <param name="dbName">Database Name</param>
+        /// <returns>Returns JObject?</returns>
+        public async Task StreamAllCollectionExport(StreamWriter writer, string dbName, Guid guid)
+        {
+            try
+            {
+                var progress = 0;
+                var db = client.GetDatabase(dbName);
+                var collections = db.ListCollections().ToList();
+
+                int totalCollections = collections.Count;
+                int processedCollections = 0;
+
+                await writer.WriteAsync("{\"" + dbName + "\":{");
+
+                var jsonWriterSettings = new JsonWriterSettings { OutputMode = JsonOutputMode.CanonicalExtendedJson };
+                bool isFirstCollection = true;
+
+                foreach (var collection in collections)
+                {
+                    progress = (int)((double)processedCollections / totalCollections * 100);
+                    await _hubContext!.Clients.All.SendAsync("ReceiveProgressDatabase", totalCollections, processedCollections, progress, guid.ToString(), "download");
+                    if (!isFirstCollection)
+                    {
+                        await writer.WriteAsync(",");
+                    }
+
+                    var collectionName = collection["name"].AsString;
+                    await writer.WriteAsync($"\"{collectionName}\": [");
+
+                    var collectionData = db.GetCollection<BsonDocument>(collectionName);
+                    var filter = new BsonDocument();
+
+                    using (var cursor = collectionData.Find(filter).ToCursor())
+                    {
+                        bool isFirstDocument = true;
+                        while (await cursor.MoveNextAsync())
+                        {
+                            foreach (var document in cursor.Current)
+                            {
+                                if (!isFirstDocument)
+                                {
+                                    await writer.WriteAsync(",");
+                                }
+
+                                var documentJson = document.ToJson(jsonWriterSettings);
+                                await writer.WriteAsync(documentJson);
+
+                                isFirstDocument = false;
+                            }
+                        }
+                    }
+
+                    await writer.WriteAsync("]");
+                    isFirstCollection = false;
+                    processedCollections++;
+                }
+                progress = (int)((double)processedCollections / totalCollections * 100);
+                await _hubContext!.Clients.All.SendAsync("ReceiveProgressDatabase", totalCollections, processedCollections, progress, guid.ToString(), "download");
+                await writer.WriteAsync("}}");
+            }
+            catch (Exception e)
+            {
+                _logger.WriteLog(LogType.Error, "User: " + username + " has failed to load the All Collections from DB: " + dbName, e);
+            }
+        }
+
         public async Task<bool> UpdateMongoDb(string dbName, string collectionName, Dictionary<string, object>? differences, Dictionary<string, string>? renameMap, string id)
         {
             try
