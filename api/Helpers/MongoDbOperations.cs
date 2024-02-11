@@ -30,7 +30,6 @@ namespace api.Helpers
         /// <returns>Returns List of <BsonDocument/></returns>
         public List<BsonDocument>? ListAllDatabases()
         {
-            _hubContext!.Clients.All.SendAsync("ReceiveProgressDatabase", 4);
             List<BsonDocument>? dbList;
             try
             {
