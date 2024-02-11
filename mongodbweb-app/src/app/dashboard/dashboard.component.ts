@@ -10,24 +10,25 @@ import { ProgressService } from '../shared/service/progress.service';
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit {
-  numberOfDBs: number = 0;
   databaseList: any[] = [];
+
+  @ViewChild('downloadModal', { static: false }) downloadModal: ElementRef;
+  currentDownloadGuid: string = '';
+  downloadInformation = { totalCollections: 0, processedCollections: 0, progress: 0, guid: '' };
+
   newDbName: string = '';
   newCollectionName: string = '';
-  currentDownloadGuid: string = '';
-  downloadInformation: DownloadProgressInformationInterface = {
-    totalCollections: 0,
-    processedCollections: 0,
-    progress: 0,
-    guid: ''
-  };
 
-  constructor(private progressService: ProgressService, private toastr: ToastrService, private modalService: NgbModal, private databaseService: DatabaseService) { }
-  @ViewChild('downloadModal', { static: false }) downloadModal: ElementRef;
+  constructor(
+    private dbService: DatabaseService,
+    private progressService: ProgressService,
+    private toastr: ToastrService,
+    private modalService: NgbModal
+  ) { }
 
 
   ngOnInit() {
-    this.loadDatabaseList();
+    this.updateDatabaseListAndStats();
     this.progressService.startConnection().then(() => {
       this.progressService.listenForDatabaseProgress(this.updateDownloadProgress.bind(this));
     });
@@ -40,42 +41,38 @@ export class DashboardComponent implements OnInit {
   updateDownloadProgress(totalCollections: number, processedCollections: number, progress: number, guid: string, messageType: string) {
     if (this.currentDownloadGuid === guid && messageType === 'download') {
       this.downloadInformation = { totalCollections, processedCollections, progress, guid };
-      if (progress === 100) {
-        setTimeout(() => {
-          this.modalService.dismissAll();
-        }, 400);
-      }
+      if (progress === 100) setTimeout(() => this.modalService.dismissAll(), 400);
     }
   }
 
-  loadDatabaseList() {
-    this.databaseService.getListDb().subscribe({
+  updateDatabaseListAndStats() {
+    this.dbService.getListDb().subscribe({
       next: (data) => {
         if (data && data.databases) {
-          this.databaseList = data.databases;
-          this.numberOfDBs = data.databases.length;
-          this.loadDatabaseStatistics();
+          const updatedDbList = data.databases;
+          const updatedDbNames = updatedDbList.map(db => db.name);
+
+          updatedDbList.forEach(db => {
+            this.dbService.getDatabaseStatistics(db.name).subscribe({
+              next: (stats) => {
+                const dbIndex = this.databaseList.findIndex(d => d.name === db.name);
+                if (dbIndex !== -1) {
+                  this.databaseList[dbIndex] = { ...db, stats: stats };
+                } else {
+                  this.databaseList.push({ ...db, stats: stats });
+                }
+              },
+              error: (error) => {
+                this.logAndToastError(`There was an error fetching statistics for database ${db.name}`, error);
+              }
+            });
+          });
+
+          this.databaseList = this.databaseList.filter(db => updatedDbNames.includes(db.name));
         }
       },
       error: (error) => {
-        console.error('There was an error fetching the database list', error);
-      }
-    });
-  }
-
-  loadDatabaseStatistics() {
-    this.databaseList.forEach((db, index) => {
-      if (db.name) {
-        this.databaseService.getDatabaseStatistics(db.name).subscribe({
-          next: (stats) => {
-            if (stats) {
-              this.databaseList[index] = { ...db, stats: stats };
-            }
-          },
-          error: (error) => {
-            console.error(`There was an error fetching statistics for database ${db.name}`, error);
-          }
-        });
+        this.logAndToastError('There was an error fetching the database list', error);
       }
     });
   }
@@ -89,48 +86,61 @@ export class DashboardComponent implements OnInit {
   createCollection() {
     this.modalService.dismissAll();
     if (!this.newDbName || !this.newCollectionName) {
-      console.error('Database name and collection name are required.');
+      this.logAndToastError('Database name and collection name are required.');
       return;
     }
 
-    this.databaseService.createCollection(this.newDbName, this.newCollectionName).subscribe({
+    this.dbService.createCollection(this.newDbName, this.newCollectionName).subscribe({
       next: (response) => {
         if (response && response.success) {
           this.toastr.info('Collection created successfully', 'Success!')
-          this.loadDatabaseList();
+          this.updateDatabaseListAndStats();
         } else {
-          console.error(`Failed to create collection '${this.newCollectionName}' in database '${this.newDbName}': ${response.message}`);
+          this.logAndToastError(`Failed to create collection '${this.newCollectionName}' in database '${this.newDbName}': ${response.message}`);
         }
       },
       error: (error) => {
-        console.error(`Error creating collection '${this.newCollectionName}' in database '${this.newDbName}':`, error);
+        this.logAndToastError(`Error creating collection '${this.newCollectionName}' in database '${this.newDbName}'`, error);
       }
     });
   }
 
-  handleDownloadRequest(event: { dbName: string, guid: string }) {
+  async handleDownloadRequest(event: { dbName: string, guid: string }) {
+    this.resetDownloadInfo(event.guid);
     this.currentDownloadGuid = event.guid;
     this.modalService.open(this.downloadModal, { centered: true });
-    this.databaseService.prepareDatabaseDownload(event.dbName, event.guid).subscribe({
-      next: (response) => {
-        if (response && response.success) {
-          this.toastr.info('Database download initiated successfully', 'Success!');
-        } else {
-          console.error(`Failed to initiate download for database '${event.dbName}': ${response.message}`);
-          this.toastr.error('Failed to initiate download', 'Error!');
-        }
-      },
-      error: (error) => {
-        console.error(`Error initiating download for database '${event.dbName}':`, error);
-        this.toastr.error('Failed to initiate download', 'Error!');
-      }
-    });
-  }
-}
 
-interface DownloadProgressInformationInterface {
-  totalCollections: number;
-  processedCollections: number;
-  progress: number;
-  guid: string;
+    try {
+      const response = await this.dbService.prepareDatabaseDownload(event.dbName, event.guid).toPromise();
+      if (response && response.success) {
+        this.toastr.info('Database download initiated successfully', 'Success!');
+        this.startDownload(response);
+      } else {
+        this.logAndToastError(`Failed to initiate download for database '${event.dbName}': ${response.message}`);
+      }
+    } catch (error) {
+      this.logAndToastError(`Error initiating download for database '${event.dbName}':`, error);
+    }
+  }
+
+  startDownload(response) {
+    if (response.fileName) {
+      const downloadUrl = `/api/file/downloadFile/${response.fileName}`;
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = '';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  }
+
+  resetDownloadInfo(guid: string) {
+    this.downloadInformation = { totalCollections: 0, processedCollections: 0, progress: 0, guid };
+  }
+
+  logAndToastError(message: string, error?: any) {
+    console.error(message, error);
+    this.toastr.error('Failed to initiate download', 'Error!');
+  }
 }

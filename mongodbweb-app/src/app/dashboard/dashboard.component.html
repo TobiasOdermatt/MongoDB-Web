@@ -1,6 +1,6 @@
 <div class="top-div">
   <h3>List of all databases</h3>
-  <p class="second-text-color">{{numberOfDBs}} Databases found</p>
+  <p class="second-text-color">{{databaseList.length}} Databases found</p>
   <button type="button" class="btn btn-primary float-end ms-3" (click)="openModal(createCollectionModal)">Create database</button>
   <button type="button" class="btn btn-primary float-end">Import</button>
 </div>
@@ -8,7 +8,7 @@
 
 <div class="row mt-4">
   <div *ngFor="let db of databaseList" class="col-lg-4 col-xl-3 col-md-5 mb-8 col-sm-12 py-3">
-    <app-db-card [db]="db" (downloadRequest)="handleDownloadRequest($event)"></app-db-card>
+    <app-db-card [db]="db" (downloadRequest)="handleDownloadRequest($event)" (updateDatabases)="updateDatabaseListAndStats()"></app-db-card>
   </div>
 </div>
 
