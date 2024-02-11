@@ -15,7 +15,7 @@ export class DatabaseService {
       .pipe(
         catchError((error: HttpErrorResponse) => {
           console.error('Error fetching database list', error);
-          this.toastr.error('Error fetching database list', 'Error');
+          this.toastr.error('Error fetching database list');
           return of({ databases: [] });
         })
       );
@@ -30,7 +30,7 @@ export class DatabaseService {
       .pipe(
         catchError((error: HttpErrorResponse) => {
           console.error(`Error fetching statistics for database '${dbName}'`, error);
-          this.toastr.error(`Error fetching statistics for database '${dbName}'`, 'Error');
+          this.toastr.error(`Error fetching statistics for database '${dbName}'`);
           return of(null);
         })
       );
@@ -41,7 +41,7 @@ export class DatabaseService {
       .pipe(
         catchError((error: HttpErrorResponse) => {
           console.error(`Error fetching global statistic'`, error);
-          this.toastr.error(`Error fetching global statistic'`, 'Error');
+          this.toastr.error(`Error fetching global statistic'`);
           return of('');
         })
       );
@@ -56,7 +56,7 @@ export class DatabaseService {
       .pipe(
         catchError((error: HttpErrorResponse) => {
           console.error(`Error fetching collections for database '${dbName}'`, error);
-          this.toastr.error(`Error fetching collections for database '${dbName}'`, 'Error');
+          this.toastr.error(`Error fetching collections for database '${dbName}'`);
           return of({ collections: [] });
         })
       );
@@ -74,7 +74,7 @@ export class DatabaseService {
         }),
         catchError((error: HttpErrorResponse) => {
           console.error(`Error deleting database '${dbName}'`, error);
-          this.toastr.error(`Error deleting database '${dbName}'`, 'Error');
+          this.toastr.error(`Error deleting database '${dbName}'`);
           return of({ success: false, message: `Error deleting database '${dbName}': ${error.message}`, statusCode: error.status });
         })
       );
@@ -90,7 +90,7 @@ export class DatabaseService {
       .pipe(
         catchError((error) => {
           console.error(`Error fetching statistics for collection '${collectionName}' in database '${dbName}'`, error);
-          this.toastr.error(`Error fetching statistics for collection '${collectionName}' in database '${dbName}'`, 'Error');
+          this.toastr.error(`Error fetching statistics for collection '${collectionName}' in database '${dbName}'`);
           return of({}); 
         })
       );
@@ -99,7 +99,7 @@ export class DatabaseService {
   createCollection(dbName: string, collectionName: string): Observable<any> {
     if (!dbName || !collectionName) {
       console.error('Database name and collection name are required.');
-      this.toastr.error('Database name and collection name are required.', 'Error');
+      this.toastr.error('Database name and collection name are required.');
       return of({ success: false, message: 'Database name and collection name are required.' });
     }
 
@@ -110,7 +110,7 @@ export class DatabaseService {
           return of({ success: true, message: `Collection '${collectionName}' created successfully in database '${dbName}'.` });
         } else {
           console.error(`Error creating collection '${collectionName}' in database '${dbName}'`, error);
-          this.toastr.error(`Error creating collection '${collectionName}' in database '${dbName}'`, 'Error');
+          this.toastr.error(`Error creating collection '${collectionName}' in database '${dbName}'`);
           return of({ success: false, message: `Error creating collection '${collectionName}' in database '${dbName}': ${error.message}`, statusCode: error.status });
         }
       })
@@ -120,7 +120,7 @@ export class DatabaseService {
   prepareDatabaseDownload(dbName: string, downloadGuid: string): Observable<any> {
     if (!dbName || !downloadGuid) {
       console.error('Database name and download GUID are required.');
-      this.toastr.error('Database name and download GUID are required.', 'Error');
+      this.toastr.error('Database name and download GUID are required.');
       return of(null);
     }
 
@@ -133,7 +133,7 @@ export class DatabaseService {
         }),
         catchError((error: HttpErrorResponse) => {
           console.error(`Error preparing download for database '${dbName}'`, error);
-          this.toastr.error(`Error preparing download for database '${dbName}'`, 'Error');
+          this.toastr.error(`Error preparing download for database '${dbName}'`);
           return of({ success: false, message: error.message, statusCode: error.status });
         })
       );

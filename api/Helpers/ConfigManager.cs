@@ -1,4 +1,4 @@
-﻿namespace mongodbweb.Server.Helpers
+﻿namespace api.Helpers
 {
     public static class ConfigManager
     {

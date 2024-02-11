@@ -1,15 +1,14 @@
 using System.Net;
-
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using mongodbweb.Server.Models;
+using api.Models;
 
-namespace mongodbweb.Server.Tests.Controllers
+namespace api.Tests.Controllers
 {
     [TestFixture]
     public class AuthControllerTests
     {
-        private readonly AuthController _controller = new ();
+        private readonly AuthController _controller = new();
         private string _usernameFromTestConfiguration = "";
         private string _passwordFromTestConfiguration = "";
 
@@ -40,7 +39,7 @@ namespace mongodbweb.Server.Tests.Controllers
             var result = _controller.CreateOtp(validCredentials) as JsonResult;
             Assert.That(result, Is.Not.Null);
         }
-        
+
         [Test]
         public void CreateOTP_With_Valid_Credentials_Not_Allowed_Ip()
         {
@@ -56,7 +55,7 @@ namespace mongodbweb.Server.Tests.Controllers
             var result = _controller.CreateOtp(validCredentials) as JsonResult;
             Assert.That(result, Is.Null);
         }
-        
+
         [Test]
         public void CreateOTP_With_Valid_Credentials_No_Ip_Given()
         {
@@ -72,7 +71,7 @@ namespace mongodbweb.Server.Tests.Controllers
             Assert.That(result, Is.Null);
         }
 
-        
+
         [Test]
         public void CreateOTP_With_Invalid_Credentials()
         {
@@ -98,11 +97,11 @@ namespace mongodbweb.Server.Tests.Controllers
                 HttpContext = context
             };
             var result = _controller.Logout() as RedirectResult;
-            
+
             Assert.That(result, Is.Not.Null);
             Assert.That(result?.Url, Is.EqualTo("/Connect"));
         }
-        
+
         [Test]
         public void Logout_Token_And_Invalid_UUID_Cookies_And_Redirects()
         {
@@ -115,10 +114,10 @@ namespace mongodbweb.Server.Tests.Controllers
             };
 
             var result = _controller.Logout() as RedirectResult;
-            
+
             Assert.That(result, Is.Not.Null);
             Assert.That(result?.Url, Is.EqualTo("/Connect"));
-            
+
             var responseCookies = context.Response.Headers["Set-Cookie"].ToString();
             Assert.Multiple(() =>
             {
@@ -139,10 +138,10 @@ namespace mongodbweb.Server.Tests.Controllers
             };
 
             var result = _controller.Logout() as RedirectResult;
-            
+
             Assert.That(result, Is.Not.Null);
             Assert.That(result?.Url, Is.EqualTo("/Connect"));
-            
+
             var responseCookies = context.Response.Headers["Set-Cookie"].ToString();
             Assert.Multiple(() =>
             {

@@ -1,28 +1,24 @@
-import { Injectable } from '@angular/core';
-import { CanActivate, Router, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
-import { Observable } from 'rxjs';
+import {inject } from '@angular/core';
+import { CanActivateFn, Router, ActivatedRouteSnapshot, RouterStateSnapshot, UrlTree } from '@angular/router';
+import { map, catchError } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
 import { EnvService } from './env.service';
-import { map } from 'rxjs/operators';
 
-@Injectable({
-  providedIn: 'root'
-})
-export class AuthGuard implements CanActivate {
+export const canActivate: CanActivateFn = (
+  next: ActivatedRouteSnapshot,
+  state: RouterStateSnapshot
+): Observable<boolean | UrlTree> => {
+  const envService = inject(EnvService);
+  const router = inject(Router);
 
-  constructor(private envService: EnvService, private router: Router) { }
-
-  canActivate(
-    route: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot): Observable<boolean> | Promise<boolean> | boolean {
-    return this.envService.isAuthorized().pipe(
-      map(isAuthorized => {
-        if (!isAuthorized) {
-          this.router.navigate(['/login']);
-          return false;
-        }
-        this.envService.updateAuthorizationStatus(true);
-        return true;
-      })
-    );
-  }
-}
+  return envService.isAuthorized().pipe(
+    map(isAuthorized => {
+      if (!isAuthorized) {
+        return router.createUrlTree(['/login']);
+      }
+      envService.updateAuthorizationStatus(true);
+      return true;
+    }),
+    catchError(() => of(router.createUrlTree(['/login'])))
+  );
+};

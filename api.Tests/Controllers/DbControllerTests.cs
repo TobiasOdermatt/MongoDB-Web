@@ -4,22 +4,28 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
-using mongodbweb.Server.Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Newtonsoft.Json.Linq;
+using api.Tests;
+using api.Models;
+using api.Controllers;
+using api.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
-namespace mongodbweb.Server.Tests.Controllers
+namespace api.Tests.Controllers
 {
     [TestFixture]
     public class DbControllerTests
     {
-        private readonly DbController _dbController = new();
+        private DbController _dbController;
         private HttpContext _validHttpContext = new DefaultHttpContext();
 
         [SetUp]
         public async Task Setup()
         {
+            var mockHubContext = new Moq.Mock<IHubContext<ProgressHub>>();
+            _dbController = new DbController(mockHubContext.Object);
             TestSetup.ConfigureDbConnector();
             _validHttpContext = TestSetup.GetValidHttpContext();
             var isAuthorized = await CheckAuthorization();
@@ -108,7 +114,7 @@ namespace mongodbweb.Server.Tests.Controllers
             var collectionCount = (int)(countProperty?.GetValue(resultValue) ?? 0);
             Assert.That(collectionCount >= 1, Is.True, "Collection count should be greater than 1.");
         }
-        
+
         [Test]
         public void GetNumberOfCollections_ReturnsBadRequest_WithoutDatabaseName()
         {
@@ -957,14 +963,14 @@ namespace mongodbweb.Server.Tests.Controllers
                 }
             }
         }
-        
+
         private async Task<bool> CheckAuthorization()
         {
             _dbController.ControllerContext = new ControllerContext()
             {
                 HttpContext = _validHttpContext
             };
-            var authorizationFilter = new mongodbweb.Server.Filters.Authorization();
+            var authorizationFilter = new api.Filters.Authorization();
 
             var actionContext = new ActionContext(_validHttpContext, new RouteData(), new ActionDescriptor());
             var actionExecutingContext = new ActionExecutingContext(actionContext, new List<IFilterMetadata>(),
@@ -980,7 +986,7 @@ namespace mongodbweb.Server.Tests.Controllers
             Assert.IsNull(actionExecutingContext.Result, "User is not authorized");
             return actionExecutingContext.Result == null;
         }
-        
+
         private static UpdateMongoDbObject CreateValidUpdateObject()
         {
             return new UpdateMongoDbObject
@@ -1006,7 +1012,7 @@ namespace mongodbweb.Server.Tests.Controllers
                 return null;
             }
         }
-        
+
         private async Task<BsonDocument?> GetDocumentById(string dbName, string collectionName, string id)
         {
             var database = _dbController.mongoDbOperations.client.GetDatabase(dbName);

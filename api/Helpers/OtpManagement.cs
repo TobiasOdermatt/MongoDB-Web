@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace mongodbweb.Server.Helpers
+namespace api.Helpers
 {
     public static class OtpManagement
     {
@@ -14,7 +14,7 @@ namespace mongodbweb.Server.Helpers
 
             return !decryptedData.Contains("Data:") ? null : decryptedData;
         }
-        
+
         public static string EncryptUserData(string inputData, string randData)
         {
             var inputBinary = StringToBinary(inputData);
@@ -29,7 +29,7 @@ namespace mongodbweb.Server.Helpers
             {
                 var randomNumber = RandomNumberGenerator.GetInt32(0, 2);
                 result.Append(randomNumber);
-                
+
                 if ((i + 1) % 8 == 0 && i != length - 1)
                     result.Append(' ');
             }
@@ -57,7 +57,7 @@ namespace mongodbweb.Server.Helpers
                 if (bin1[i] == ' ')
                 {
                     res += ' ';
-                    continue; 
+                    continue;
                 }
 
                 res += bin1[i] == bin2[i] ? '0' : '1';
@@ -70,7 +70,7 @@ namespace mongodbweb.Server.Helpers
             var binaryArray = binary.Split(' ');
             return binaryArray.Select(s => Convert.ToInt32(s, 2)).Select(i => (char)i).Aggregate("", (current, c) => current + c.ToString());
         }
-        
+
         private static string StringToBinary(string input)
         {
             return string.Join(" ", input.Select(c => Convert.ToString(c, 2).PadLeft(8, '0')));

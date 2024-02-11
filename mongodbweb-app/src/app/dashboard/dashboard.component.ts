@@ -2,6 +2,7 @@ import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { DatabaseService } from '../shared/service/database.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ToastrService } from 'ngx-toastr';
+import { firstValueFrom } from 'rxjs';
 import { ProgressService } from '../shared/service/progress.service';
 
 @Component({
@@ -93,7 +94,7 @@ export class DashboardComponent implements OnInit {
     this.dbService.createCollection(this.newDbName, this.newCollectionName).subscribe({
       next: (response) => {
         if (response && response.success) {
-          this.toastr.info('Collection created successfully', 'Success!')
+          this.toastr.info('Collection created successfully')
           this.updateDatabaseListAndStats();
         } else {
           this.logAndToastError(`Failed to create collection '${this.newCollectionName}' in database '${this.newDbName}': ${response.message}`);
@@ -111,9 +112,9 @@ export class DashboardComponent implements OnInit {
     this.modalService.open(this.downloadModal, { centered: true });
 
     try {
-      const response = await this.dbService.prepareDatabaseDownload(event.dbName, event.guid).toPromise();
+      const response = await firstValueFrom(this.dbService.prepareDatabaseDownload(event.dbName, event.guid));
       if (response && response.success) {
-        this.toastr.info('Database download initiated successfully', 'Success!');
+        this.toastr.info('Database download initiated successfully');
         this.startDownload(response);
       } else {
         this.logAndToastError(`Failed to initiate download for database '${event.dbName}': ${response.message}`);
@@ -141,6 +142,6 @@ export class DashboardComponent implements OnInit {
 
   logAndToastError(message: string, error?: any) {
     console.error(message, error);
-    this.toastr.error('Failed to initiate download', 'Error!');
+    this.toastr.error('Failed to initiate download');
   }
 }

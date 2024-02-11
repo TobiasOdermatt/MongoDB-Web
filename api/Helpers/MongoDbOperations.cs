@@ -5,9 +5,9 @@ using MongoDB.Bson.IO;
 using MongoDB.Driver;
 using Newtonsoft.Json.Linq;
 using System;
-using static mongodbweb.Server.Helpers.LogManager;
+using static api.Helpers.LogManager;
 
-namespace mongodbweb.Server.Helpers
+namespace api.Helpers
 {
     public class MongoDbOperations
     {
@@ -38,13 +38,13 @@ namespace mongodbweb.Server.Helpers
             }
             catch (Exception e)
             {
-                _logger.WriteLog(LogType.Error, "User: "  + username + " has failed to load Dashboard ", e);
+                _logger.WriteLog(LogType.Error, "User: " + username + " has failed to load Dashboard ", e);
                 return null;
             }
 
             return dbList;
         }
-        
+
         /// <summary>
         /// List every Collection from specific database
         /// </summary>
@@ -65,7 +65,7 @@ namespace mongodbweb.Server.Helpers
 
             return result;
         }
-        
+
         /// <summary>
         /// Get the number of Collections
         /// </summary>
@@ -147,7 +147,7 @@ namespace mongodbweb.Server.Helpers
             }
             return keyList;
         }
-        
+
         public async Task<bool> RenameAttributeInCollectionAsync(string dbName, string collectionName, Dictionary<string, string>? renameMap)
         {
             try
@@ -172,7 +172,7 @@ namespace mongodbweb.Server.Helpers
                 return false;
             }
         }
-        
+
         public long GetTotalCount(string dbName, string collectionName, string selectedKey, string searchValue)
         {
             var filter = Builders<BsonDocument>.Filter.Empty;
@@ -200,7 +200,7 @@ namespace mongodbweb.Server.Helpers
 
             return collection.CountDocuments(filter);
         }
-        
+
         public List<BsonDocument> GetCollection(string dbName, string collectionName, int skip, int limit, string selectedKey, string searchValue)
         {
             var filter = Builders<BsonDocument>.Filter.Empty;
@@ -229,7 +229,7 @@ namespace mongodbweb.Server.Helpers
 
             return collection.Find(filter).Skip(skip).Limit(limit).ToList().Select(doc => doc).ToList();
         }
-        
+
         public int GetCollectionCount(string dbName, string collectionName, string selectedKey, string searchValue)
         {
             var filter = Builders<BsonDocument>.Filter.Empty;
@@ -242,7 +242,7 @@ namespace mongodbweb.Server.Helpers
             var collection = database.GetCollection<BsonDocument>(collectionName);
             return (int)collection.CountDocuments(filter);
         }
-        
+
         public async Task<bool> InsertDocumentAsync(string dbName, string collectionName, dynamic document)
         {
             try
@@ -262,7 +262,7 @@ namespace mongodbweb.Server.Helpers
                 return false;
             }
         }
-        
+
         public bool DeleteAllDatabases()
         {
             var overallResult = true;
@@ -283,7 +283,7 @@ namespace mongodbweb.Server.Helpers
 
             return overallResult;
         }
-        
+
         /// <summary>
         /// Delete a specific Collection from a Database
         /// </summary>
@@ -306,7 +306,7 @@ namespace mongodbweb.Server.Helpers
 
             return result;
         }
-        
+
         /// <summary>
         /// Create a new Collection
         /// </summary>
@@ -330,7 +330,7 @@ namespace mongodbweb.Server.Helpers
 
             return result;
         }
-        
+
         /// <summary>
         /// Delete a specific Collection
         /// </summary>
@@ -355,7 +355,7 @@ namespace mongodbweb.Server.Helpers
 
             return result;
         }
-        
+
         /// <summary>
         /// Get all statistics of a specific MongoDB database
         /// </summary>
@@ -376,7 +376,7 @@ namespace mongodbweb.Server.Helpers
                 return null;
             }
         }
-        
+
         /// <summary>
         /// Get all statistics of a specific MongoDB collection
         /// </summary>
@@ -399,7 +399,7 @@ namespace mongodbweb.Server.Helpers
                 return null;
             }
         }
-        
+
         /// <summary>
         /// Get global statistics of the MongoDB instance
         /// </summary>
@@ -419,7 +419,7 @@ namespace mongodbweb.Server.Helpers
                 return null;
             }
         }
-        
+
         ///<summary>
         ///Check if database already exist
         /// </summary>
@@ -443,13 +443,13 @@ namespace mongodbweb.Server.Helpers
 
             return result;
         }
-        
+
         public async Task<bool> UploadJsonAsync(string dbName, string collectionName, JToken? json, bool adaptOid)
         {
             try
             {
                 var db = client.GetDatabase(dbName);
-                var collection =  db.GetCollection<BsonDocument>(collectionName);
+                var collection = db.GetCollection<BsonDocument>(collectionName);
 
                 if (json is JArray jsonArray)
                 {

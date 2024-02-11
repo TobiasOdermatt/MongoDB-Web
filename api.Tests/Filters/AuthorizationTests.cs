@@ -1,28 +1,34 @@
-﻿namespace mongodbweb.Server.Tests.Filters;
+﻿namespace api.Tests.Filters;
+using api.Controllers;
+using api.Hubs;
+using api.Tests;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.SignalR;
 
 public class AuthorizationTests
 {
     private HttpContext _validHttpContext = new DefaultHttpContext();
-    private readonly DbController _dbController = new ();
-    
+    private DbController _dbController;
+
     [SetUp]
     public void Setup()
     {
+        var mockHubContext = new Moq.Mock<IHubContext<ProgressHub>>();
+        _dbController = new DbController(mockHubContext.Object);
         TestSetup.ConfigureDbConnector();
         _validHttpContext = TestSetup.GetValidHttpContext();
     }
-            
+
     [Test]
     public async Task SuccessAuthorizationFilterCheck()
     {
 
-        var authorizationFilter = new mongodbweb.Server.Filters.Authorization();
-            
+        var authorizationFilter = new api.Filters.Authorization();
+
         var actionContext = new ActionContext(_validHttpContext, new RouteData(), new ActionDescriptor());
         var actionExecutingContext = new ActionExecutingContext(actionContext, new List<IFilterMetadata>(), new Dictionary<string, object>()!, _dbController);
 
@@ -35,13 +41,13 @@ public class AuthorizationTests
         await authorizationFilter.OnActionExecutionAsync(actionExecutingContext, Next);
         Assert.IsNull(actionExecutingContext.Result, "User is not authorized");
     }
-    
+
     [Test]
     public async Task FailAuthorizationFilterCheck()
     {
         var invalidContext = new DefaultHttpContext();
-        var authorizationFilter = new mongodbweb.Server.Filters.Authorization();
-            
+        var authorizationFilter = new api.Filters.Authorization();
+
         var actionContext = new ActionContext(invalidContext, new RouteData(), new ActionDescriptor());
         var actionExecutingContext = new ActionExecutingContext(actionContext, new List<IFilterMetadata>(), new Dictionary<string, object>()!, _dbController);
 

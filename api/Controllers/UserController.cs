@@ -1,6 +1,6 @@
-﻿namespace mongodbweb.Server.Controllers;
+﻿namespace api.Controllers;
 
 public class UserController
 {
-    
+
 }

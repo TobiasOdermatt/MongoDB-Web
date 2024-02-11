@@ -1,3 +1,3 @@
 global using NUnit.Framework;
-global using mongodbweb.Server.Controllers;
-global using mongodbweb.Server.Helpers;
+global using api.Controllers;
+global using api.Helpers;

@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using mongodbweb.Server.Filters;
+using api.Filters;
 using System.Net.Mime;
 
-namespace mongodbweb.Server.Controllers;
+namespace api.Controllers;
 
 [Route("api/[controller]")]
 [Authorization]

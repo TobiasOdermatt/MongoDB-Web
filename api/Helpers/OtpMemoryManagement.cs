@@ -1,7 +1,7 @@
-﻿using mongodbweb.Server.Models;
-using static mongodbweb.Server.Helpers.LogManager;
+﻿using api.Models;
+using static api.Helpers.LogManager;
 
-namespace mongodbweb.Server.Helpers
+namespace api.Helpers
 {
     public static class OtpMemoryManagement
     {

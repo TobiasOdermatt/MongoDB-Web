@@ -1,16 +1,16 @@
+using api.Helpers;
+using api.Models;
 using Microsoft.AspNetCore.Mvc;
-using mongodbweb.Server.Helpers;
-using mongodbweb.Server.Models;
-using static mongodbweb.Server.Helpers.LogManager;
+using static api.Helpers.LogManager;
 
-namespace mongodbweb.Server.Controllers
+namespace api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class AuthController : Controller
     {
         private readonly LogManager _logger = new();
-        private static Object GenerateAuthResponse(string uuid, string token)
+        private static object GenerateAuthResponse(string uuid, string token)
         {
             return new { uuid, token };
         }
@@ -23,16 +23,16 @@ namespace mongodbweb.Server.Controllers
                 return NoContent();
 
             var ipOfRequest = Request.HttpContext.Connection.RemoteIpAddress.ToString();
-            
+
             DbConnector connector = new(dataJson.Username, dataJson.Password, Request.HttpContext.Connection.RemoteIpAddress.ToString());
-            
+
             if (connector.client == null)
                 return NoContent();
-            
+
             var inputData = $"Data:{dataJson.Username}@{dataJson.Password}";
-            var randData = OtpManagement.GenerateRandomBinaryData(inputData.Length*8);
-            var token = OtpManagement.EncryptUserData(inputData,randData);
-            
+            var randData = OtpManagement.GenerateRandomBinaryData(inputData.Length * 8);
+            var token = OtpManagement.EncryptUserData(inputData, randData);
+
             var uuid = Guid.NewGuid().ToString();
 
             var localDate = DateTime.Now;
@@ -45,7 +45,7 @@ namespace mongodbweb.Server.Controllers
             var responseAuth = GenerateAuthResponse(uuid, token);
             return new JsonResult(responseAuth);
         }
-        
+
         [HttpGet("Logout")]
         public IActionResult Logout()
         {

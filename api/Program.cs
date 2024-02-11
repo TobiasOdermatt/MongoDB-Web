@@ -1,6 +1,6 @@
+using api.Helpers;
 using api.Hubs;
-using mongodbweb.Server.Helpers;
-using static mongodbweb.Server.Helpers.LogManager;
+using static api.Helpers.LogManager;
 using Path = System.IO.Path;
 
 var builder = WebApplication.CreateBuilder(args);

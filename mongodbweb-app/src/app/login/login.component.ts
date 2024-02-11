@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { EnvService } from "../shared/service/env.service";
 import { ConnectService } from './service/connect.service';
 import { ToastrService } from 'ngx-toastr';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-login',
@@ -31,7 +32,7 @@ export class LoginComponent implements OnInit{
   async validate(): Promise<void> {
 
     try {
-      const successResult = await this.connectService.createOTP(this.username, this.password).toPromise();
+      const successResult = await firstValueFrom(this.connectService.createOTP(this.username, this.password));
 
       if (successResult && successResult.hasOwnProperty('uuid') && successResult.hasOwnProperty('token')) {
         this.setCookie('Token',successResult['token'] , 10);
@@ -46,6 +47,7 @@ export class LoginComponent implements OnInit{
       this.toastr.error('Cannot make a connection to the API');
     }
   }
+
   private setCookie(name: string, value: string, days: number) {
     const expires = new Date();
     expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
