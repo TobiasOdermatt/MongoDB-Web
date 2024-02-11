@@ -1,4 +1,4 @@
-name: .NET
+name: .NET tests and docker build
 
 on:
   push:
@@ -25,10 +25,11 @@ jobs:
           MONGO_INITDB_ROOT_PASSWORD: your-pwd
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v5
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v5
       with:
         dotnet-version: 8.0.x
 
@@ -42,6 +43,6 @@ jobs:
       run: |
         export MONGODB_CONNECTION_STRING="mongodb://user:your-pwd@localhost:27017"
         dotnet test mongodbweb.sln --no-build --verbosity normal
-        
+
     - name: Build Docker image
       run: docker-compose build
