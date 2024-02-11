@@ -8,9 +8,6 @@ using Microsoft.Extensions.Primitives;
 using api.Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Amazon.Runtime.Internal.Transform;
-using api.Controllers;
-using api.Helpers;
 
 namespace api.Tests;
 
