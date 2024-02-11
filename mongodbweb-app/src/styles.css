@@ -76,6 +76,7 @@ html, body {
 .dropdown-item:hover {
   background-color: var(--secound-color) !important;
   color: var(--font-color) !important;
+  cursor: pointer;
 }
 
 .modal-content {

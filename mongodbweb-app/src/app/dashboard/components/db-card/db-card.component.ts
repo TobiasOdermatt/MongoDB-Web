@@ -70,6 +70,10 @@ export class DbCardComponent {
     });
   }
 
+  isCriticalDatabase(dbName) {
+    return dbName === 'admin' || dbName === 'config' || dbName === 'local';
+  }
+
   openModal(content) {
     this.typedDbName = '';
     this.modalService.open(content, { centered: true })

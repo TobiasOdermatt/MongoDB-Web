@@ -1,5 +1,5 @@
 <div class="shadow card h-100 rounded cardbox">
-  <div class="card-header py-1" [ngClass]="{'danger-background': db['name'] === 'admin' || db['name'] === 'config' || db['name'] === 'local'}">
+  <div class="card-header py-1" [ngClass]="{'danger-background': isCriticalDatabase(db['name'])}">
     <div class="card-title">
       <h4 class="title-card">{{db['name']}}</h4>
     </div>
@@ -25,10 +25,11 @@
         <li><a class="dropdown-item element-background" (click)="openModal(detailModal)">Details DB</a></li>
         <li><a class="dropdown-item element-background" href="#">Copy DB</a></li>
         <li><div class="dropdown-item element-background" (click)="downloadDatabase(db.name)">Download DB</div></li>
-        <li>
+
+        <li *ngIf="!isCriticalDatabase(db['name'])">
           <hr class="dropdown-divider" />
         </li>
-        <li>
+        <li *ngIf="!isCriticalDatabase(db['name'])">
           <div class="dropdown-item text-danger" (click)="openModal(deleteConfirmationModal)">Delete Database</div>
         </li>
       </ul>
