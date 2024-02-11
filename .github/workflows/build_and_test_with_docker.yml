@@ -42,3 +42,6 @@ jobs:
       run: |
         export MONGODB_CONNECTION_STRING="mongodb://user:your-pwd@localhost:27017"
         dotnet test mongodbweb.sln --no-build --verbosity normal
+        
+    - name: Build Docker image
+      run: docker-compose build
