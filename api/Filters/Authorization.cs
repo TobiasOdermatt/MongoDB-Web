@@ -28,12 +28,16 @@ namespace mongodbweb.Server.Filters
                     return;
                 }
                 
-                if (context.Controller is DbController controller && _mongoClient != null)
+                if (context.Controller is DbController dbController && _mongoClient != null)
                 {
-                    controller.mongoDbOperations.client = _mongoClient;
-                    controller.mongoDbOperations.username = _username;
-                    controller.mongoDbOperations.uuid = _uuid;
+                    dbController.mongoDbOperations.client = _mongoClient;
+                    dbController.mongoDbOperations.username = _username;
+                    dbController.mongoDbOperations.uuid = _uuid;
                 }
+
+                if(context.Controller is FileController fileController)
+                    fileController.userUUID = _uuid;
+                
                 await next();
             }
             else
