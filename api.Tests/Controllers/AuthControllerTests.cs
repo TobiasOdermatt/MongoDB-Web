@@ -1,15 +1,14 @@
 using System.Net;
-
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using mongodbweb.Server.Models;
+using api.Models;
 
-namespace mongodbweb.Server.Tests.Controllers
+namespace api.Tests.Controllers
 {
     [TestFixture]
     public class AuthControllerTests
     {
-        private readonly AuthController _controller = new ();
+        private readonly AuthController _controller = new();
         private string _usernameFromTestConfiguration = "";
         private string _passwordFromTestConfiguration = "";
 
@@ -38,9 +37,9 @@ namespace mongodbweb.Server.Tests.Controllers
 
             var validCredentials = new ConnectRequestObject { Username = _usernameFromTestConfiguration, Password = _passwordFromTestConfiguration };
             var result = _controller.CreateOtp(validCredentials) as JsonResult;
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
         }
-        
+
         [Test]
         public void CreateOTP_With_Valid_Credentials_Not_Allowed_Ip()
         {
@@ -54,9 +53,9 @@ namespace mongodbweb.Server.Tests.Controllers
 
             var validCredentials = new ConnectRequestObject { Username = _usernameFromTestConfiguration, Password = _passwordFromTestConfiguration };
             var result = _controller.CreateOtp(validCredentials) as JsonResult;
-            Assert.IsNull(result);
+            Assert.That(result, Is.Null);
         }
-        
+
         [Test]
         public void CreateOTP_With_Valid_Credentials_No_Ip_Given()
         {
@@ -69,10 +68,10 @@ namespace mongodbweb.Server.Tests.Controllers
 
             var validCredentials = new ConnectRequestObject { Username = _usernameFromTestConfiguration, Password = _passwordFromTestConfiguration };
             var result = _controller.CreateOtp(validCredentials) as JsonResult;
-            Assert.IsNull(result);
+            Assert.That(result, Is.Null);
         }
 
-        
+
         [Test]
         public void CreateOTP_With_Invalid_Credentials()
         {
@@ -86,7 +85,7 @@ namespace mongodbweb.Server.Tests.Controllers
 
             var validCredentials = new ConnectRequestObject { Username = "INVALID_USERNAME", Password = "INVALID_PASSWORD" };
             var result = _controller.CreateOtp(validCredentials) as JsonResult;
-            Assert.IsNull(result);
+            Assert.That(result, Is.Null);
         }
 
         [Test]
@@ -98,11 +97,11 @@ namespace mongodbweb.Server.Tests.Controllers
                 HttpContext = context
             };
             var result = _controller.Logout() as RedirectResult;
-            
-            Assert.IsNotNull(result);
-            Assert.AreEqual("/Connect", result?.Url);
+
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result?.Url, Is.EqualTo("/Connect"));
         }
-        
+
         [Test]
         public void Logout_Token_And_Invalid_UUID_Cookies_And_Redirects()
         {
@@ -115,16 +114,18 @@ namespace mongodbweb.Server.Tests.Controllers
             };
 
             var result = _controller.Logout() as RedirectResult;
-            
-            Assert.IsNotNull(result);
-            Assert.AreEqual("/Connect", result?.Url);
-            
+
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result?.Url, Is.EqualTo("/Connect"));
+
             var responseCookies = context.Response.Headers["Set-Cookie"].ToString();
-            Assert.IsFalse(responseCookies.Contains("UUID=;"));
-            Assert.IsFalse(responseCookies.Contains("Token=;"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(responseCookies.Contains("UUID=;"), Is.False);
+                Assert.That(responseCookies.Contains("Token=;"), Is.False);
+            });
         }
 
-                
         [Test]
         public void Logout_Removes_Token_And_Valid_UUID_Cookies_And_Redirects()
         {
@@ -137,13 +138,16 @@ namespace mongodbweb.Server.Tests.Controllers
             };
 
             var result = _controller.Logout() as RedirectResult;
-            
-            Assert.IsNotNull(result);
-            Assert.AreEqual("/Connect", result?.Url);
-            
+
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result?.Url, Is.EqualTo("/Connect"));
+
             var responseCookies = context.Response.Headers["Set-Cookie"].ToString();
-            Assert.IsTrue(responseCookies.Contains("UUID=;"));
-            Assert.IsTrue(responseCookies.Contains("Token=;"));
+            Assert.Multiple(() =>
+            {
+                Assert.That(responseCookies.Contains("UUID=;"), Is.True);
+                Assert.That(responseCookies.Contains("Token=;"), Is.True);
+            });
         }
     }
 }

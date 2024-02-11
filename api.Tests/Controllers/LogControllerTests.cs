@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using api.Controllers;
+using api.Helpers;
+using Microsoft.AspNetCore.Mvc;
 
-namespace mongodbweb.Server.Tests.Controllers;
+namespace api.Tests.Controllers;
 [TestFixture]
 public class LogControllerTests
 {
-    private readonly LogController _controller = new ();
+    private readonly LogController _controller = new();
     private readonly LogManager _logger = new();
     [SetUp]
     public void Setup()
@@ -19,12 +21,12 @@ public class LogControllerTests
     public void CountLog_WithInvalidDate_ReturnsBadRequest()
     {
         var result = _controller.CountLog(DateTime.MinValue) as BadRequestObjectResult;
-        Assert.IsNotNull(result);
-        
+        Assert.That(result, Is.Not.Null);
+
         if (result is not { Value: not null }) return;
-        Assert.AreEqual("Invalid or missing date parameter.", result.Value);
+        Assert.That(result.Value, Is.EqualTo("Invalid or missing date parameter."));
     }
-    
+
 
     private static void DeleteLogDirectory()
     {

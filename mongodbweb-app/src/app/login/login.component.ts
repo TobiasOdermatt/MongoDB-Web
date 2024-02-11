@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { EnvService } from "../shared/service/env.service";
 import { ConnectService } from './service/connect.service';
+import { ToastrService } from 'ngx-toastr';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-login',
@@ -11,10 +13,8 @@ import { ConnectService } from './service/connect.service';
 export class LoginComponent implements OnInit{
   username: string = '';
   password: string = '';
-  alertSuccessVisible: boolean = false;
-  alertDangerVisible: boolean = false;
 
-  constructor(private connectService: ConnectService, private envService: EnvService, private router: Router) { }
+  constructor(private connectService: ConnectService, private envService: EnvService, private router: Router, private toastr: ToastrService) { }
 
   ngOnInit() {
     this.envService.isAuthorized().subscribe(isAuthorized => {
@@ -32,25 +32,22 @@ export class LoginComponent implements OnInit{
   async validate(): Promise<void> {
 
     try {
-      const successResult = await this.connectService.createOTP(this.username, this.password).toPromise();
+      const successResult = await firstValueFrom(this.connectService.createOTP(this.username, this.password));
 
       if (successResult && successResult.hasOwnProperty('uuid') && successResult.hasOwnProperty('token')) {
         this.setCookie('Token',successResult['token'] , 10);
         this.setCookie('UUID', successResult['uuid'].toString(), 10);
-        this.alertSuccessVisible = true;
-        this.alertDangerVisible = false;
-        await this.sleep(200);
+        this.toastr.success('Login successful!')
         this.envService.updateAuthorizationStatus(true);
         this.router.navigate(['/dashboard']);
       } else {
-        this.alertDangerVisible = true;
-        this.alertSuccessVisible = false;
+        this.toastr.error('Invalid username or password');
       }
     } catch (error) {
-      this.alertDangerVisible = true;
-      this.alertSuccessVisible = false;
+      this.toastr.error('Cannot make a connection to the API');
     }
   }
+
   private setCookie(name: string, value: string, days: number) {
     const expires = new Date();
     expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);

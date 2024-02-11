@@ -1,4 +1,4 @@
-﻿namespace mongodbweb.Server.Models
+﻿namespace api.Models
 {
     public class OtpFileObject
     {

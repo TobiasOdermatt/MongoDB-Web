@@ -5,11 +5,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Primitives;
-using mongodbweb.Server.Models;
+using api.Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using Amazon.Runtime.Internal.Transform;
+using api.Controllers;
+using api.Helpers;
 
-namespace mongodbweb.Server.Tests;
+namespace api.Tests;
 
 public static class TestSetup
 {
@@ -19,14 +22,14 @@ public static class TestSetup
     private const string DbRules = "?authSource=admin";
     private const string AllowedIp = "*";
     private const bool UseAuthorization = true;
-    
-    private static readonly AuthController AuthController = new ();
+
+    private static readonly AuthController AuthController = new();
 
     public static string GetConnectionString()
     {
         return Environment.GetEnvironmentVariable("MONGODB_CONNECTION_STRING") ?? ConnectionString;
-    } 
-    
+    }
+
     public static (string username, string password) ExtractUsernameAndPassword()
     {
         const string pattern = @"mongodb:\/\/([^:]+):([^@]+)@";
@@ -37,7 +40,7 @@ public static class TestSetup
 
         return (username, password);
     }
-    
+
     public static void ConfigureDbConnector()
     {
         var inMemorySettings = new Dictionary<string, string?>
@@ -48,13 +51,14 @@ public static class TestSetup
             {"DBPort", DbPort},
             {"DBRule", DbRules},
             {"CustomConnectionString", ""},
+            {"DeleteOtpInDays", "1" },
             {"AllowedIP", AllowedIp}
         };
 
         IConfiguration configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(inMemorySettings)
             .Build();
-            
+
         ConfigManager.SetConfig(configuration);
     }
 
@@ -66,9 +70,9 @@ public static class TestSetup
         {
             HttpContext = context
         };
-        
+
         var usernameAndPassword = ExtractUsernameAndPassword();
-            
+
         var validCredentials = new ConnectRequestObject { Username = usernameAndPassword.username, Password = usernameAndPassword.password };
         var result = AuthController.CreateOtp(validCredentials) as JsonResult;
 
@@ -80,17 +84,17 @@ public static class TestSetup
         if (uuidProperty == null || tokenProperty == null) return new DefaultHttpContext();
         var uuid = (string)uuidProperty.GetValue(result.Value)!;
         var token = (string)tokenProperty.GetValue(result.Value)!;
-        
-        context.Request.Headers.Add("Cookie", new StringValues($"UUID={uuid}; Token={token}"));
+
+        context.Request.Headers.Append("Cookie", new StringValues($"UUID={uuid}; Token={token}"));
         return context;
     }
-    
+
     public static void DropTestDatabase()
     {
         var client = new MongoClient(GetConnectionString());
         client.DropDatabase("UnitTestDb");
     }
-    
+
     public static void GenerateTestDb()
     {
         var client = new MongoClient(GetConnectionString());

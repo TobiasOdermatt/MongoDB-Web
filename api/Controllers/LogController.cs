@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using mongodbweb.Server.Helpers;
-using mongodbweb.Server.Models;
+﻿using api.Helpers;
+using api.Models;
+using Microsoft.AspNetCore.Mvc;
 
-namespace mongodbweb.Server.Controllers;
+namespace api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
@@ -15,7 +15,7 @@ public class LogController : Controller
             return BadRequest("Invalid or missing date parameter.");
 
         var (infoCount, warningCount, errorCount) = LogManager.CountLog(date);
-        var result = new 
+        var result = new
         {
             InfoCount = infoCount,
             WarningCount = warningCount,
@@ -25,14 +25,14 @@ public class LogController : Controller
         return Ok(result);
     }
 
-    
+
     [HttpGet("AvailableLogDates")]
     public ActionResult<List<DateTime>> GetAvailableLogDates()
     {
         var dates = LogManager.GetAvailableLogDates();
         return Ok(dates);
     }
-    
+
     [HttpGet("ReadLogFiles")]
     public ActionResult<List<LogObject>> ReadLogFiles(string type, DateTime? date)
     {

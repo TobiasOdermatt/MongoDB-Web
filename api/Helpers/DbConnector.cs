@@ -1,9 +1,9 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.Core.Clusters;
-using static mongodbweb.Server.Helpers.LogManager;
+using static api.Helpers.LogManager;
 
-namespace mongodbweb.Server.Helpers
+namespace api.Helpers
 {
     public class DbConnector
     {
@@ -25,7 +25,7 @@ namespace mongodbweb.Server.Helpers
         {
             if (ConfigManager.allowedIp != "*" && ConfigManager.allowedIp != ipOfRequest)
             {
-                _= new LogManager(LogType.Error, $"User; {username} has failed to connect to the DB, IP: {ipOfRequest} is not allowed");
+                _ = new LogManager(LogType.Error, $"User; {username} has failed to connect to the DB, IP: {ipOfRequest} is not allowed");
                 return null;
             }
 
@@ -42,7 +42,7 @@ namespace mongodbweb.Server.Helpers
             }
             catch (Exception e)
             {
-                _= new LogManager(LogType.Error, $"User: {username} has failed to connect to the DB, IP: {ipOfRequest} with error: {e.Message}", e);
+                _ = new LogManager(LogType.Error, $"User: {username} has failed to connect to the DB, IP: {ipOfRequest} with error: {e.Message}", e);
                 return null;
             }
         }
@@ -62,7 +62,7 @@ namespace mongodbweb.Server.Helpers
             input = input.Trim();
             return Uri.EscapeDataString(input);
         }
-        
+
         public bool IsUserAdmin(string username)
         {
             var database = client?.GetDatabase("admin");

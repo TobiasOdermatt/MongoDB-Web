@@ -1,11 +1,12 @@
-using mongodbweb.Server.Helpers;
-using static mongodbweb.Server.Helpers.LogManager;
+using api.Helpers;
+using api.Hubs;
+using static api.Helpers.LogManager;
 using Path = System.IO.Path;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddSignalR();
 builder.Services.AddControllers();
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -28,12 +29,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
-
+app.UseHttpsRedirection();
+app.MapHub<ProgressHub>("/api/ws/progressHub");
 app.MapFallbackToFile("/index.html");
 
 app.Run();

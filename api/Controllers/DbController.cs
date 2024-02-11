@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using mongodbweb.Server.Filters;
-using mongodbweb.Server.Helpers;
-using mongodbweb.Server.Models;
+using api.Filters;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Newtonsoft.Json.Linq;
+using api.Hubs;
+using Microsoft.AspNetCore.SignalR;
+using api.Models;
+using api.Helpers;
 
-namespace mongodbweb.Server.Controllers
+namespace api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -15,9 +17,9 @@ namespace mongodbweb.Server.Controllers
     {
         public readonly MongoDbOperations mongoDbOperations;
 
-        public DbController()
+        public DbController(IHubContext<ProgressHub> hubContext)
         {
-            mongoDbOperations = new MongoDbOperations { client = new MongoClient("mongodb://invalid:27017") };
+            mongoDbOperations = new MongoDbOperations(hubContext) { client = new MongoClient("mongodb://invalid:27017") };
         }
 
         [HttpGet("listDB")]
@@ -46,7 +48,7 @@ namespace mongodbweb.Server.Controllers
 
             return Ok(new { collections = jsonList });
         }
-        
+
         [HttpGet("numberOfCollections/{dbName}")]
         public IActionResult GetNumberOfCollections(string dbName)
         {
@@ -59,7 +61,7 @@ namespace mongodbweb.Server.Controllers
 
             return Ok(new { count = collectionCount });
         }
-        
+
         [HttpGet("getCollection/{dbName}/{collectionName}")]
         public IActionResult GetCollection(string dbName, string collectionName)
         {
@@ -110,7 +112,7 @@ namespace mongodbweb.Server.Controllers
 
             return Ok("Attributes renamed successfully.");
         }
-        
+
         [HttpGet("totalCount/{dbName}/{collectionName}")]
         public IActionResult GetTotalCount(string dbName, string collectionName, [FromQuery] string selectedKey, [FromQuery] string searchValue)
         {
@@ -140,7 +142,7 @@ namespace mongodbweb.Server.Controllers
 
             return Ok(new { data = collectionData });
         }
-        
+
         [HttpGet("collectionCount/{dbName}/{collectionName}")]
         public IActionResult GetCollectionCount(string dbName, string collectionName, [FromQuery] string selectedKey, [FromQuery] string searchValue)
         {
@@ -154,7 +156,7 @@ namespace mongodbweb.Server.Controllers
 
             return Ok(new { count });
         }
-        
+
         [HttpPost("insertDocument/{dbName}/{collectionName}")]
         public async Task<IActionResult> InsertDocumentAsync(string dbName, string collectionName, [FromBody] dynamic document)
         {
@@ -185,7 +187,7 @@ namespace mongodbweb.Server.Controllers
 
             return Ok("All databases deleted successfully.");
         }
-        
+
         [HttpDelete("deleteDatabase/{dbName}")]
         public IActionResult DeleteDatabase(string dbName)
         {
@@ -199,7 +201,7 @@ namespace mongodbweb.Server.Controllers
 
             return Ok($"Database '{dbName}' deleted successfully.");
         }
-        
+
         [HttpPost("createCollection/{dbName}/{collectionName}")]
         public IActionResult CreateCollection(string dbName, string collectionName)
         {
@@ -216,7 +218,7 @@ namespace mongodbweb.Server.Controllers
 
             return Ok($"Collection '{collectionName}' created successfully in database '{dbName}'.");
         }
-        
+
         [HttpDelete("deleteCollection/{dbName}/{collectionName}")]
         public IActionResult DeleteCollection(string dbName, string collectionName)
         {
@@ -233,7 +235,7 @@ namespace mongodbweb.Server.Controllers
 
             return Ok($"Collection '{collectionName}' deleted successfully from database '{dbName}'.");
         }
-        
+
         [HttpGet("databaseStatistics/{dbName}")]
         public IActionResult GetDatabaseStatistics(string dbName)
         {
@@ -283,7 +285,7 @@ namespace mongodbweb.Server.Controllers
 
             return Ok(new { exists = result });
         }
-        
+
         [HttpPost("uploadJson/{dbName}/{collectionName}")]
         public async Task<IActionResult> UploadJsonAsync(string dbName, string collectionName, [FromBody] JToken? json, [FromQuery] bool adaptOid)
         {
@@ -303,7 +305,7 @@ namespace mongodbweb.Server.Controllers
 
             return Ok("JSON uploaded successfully.");
         }
-        
+
         [HttpPost("executeQuery/{dbName}/{collectionName}")]
         public async Task<IActionResult> ExecuteMongoQuery(string dbName, string collectionName, [FromBody] string query)
         {
@@ -346,6 +348,53 @@ namespace mongodbweb.Server.Controllers
 
             return Ok($"Document with ID '{id}' updated successfully in collection '{collectionName}' of database '{dbName}'.");
         }
+
+        [HttpGet("prepareDatabaseDownload/{dbName}/{downloadGuid}")]
+        public async Task<IActionResult> PrepareDatabaseDownload(string dbName, Guid downloadGuid)
+        {
+            if (string.IsNullOrEmpty(dbName))
+                return BadRequest("Database name is required.");
+
+            if (downloadGuid == Guid.Empty)
+                return BadRequest("Valid download GUID is required.");
+
+            var fileName = $"db-{dbName}-{downloadGuid.ToString()[^4..]}.json";
+            var filePath = $"UserStorage/download/{mongoDbOperations.uuid}/{fileName}";
+
+            try
+            {
+                var directory = Path.GetDirectoryName(filePath);
+                if (directory == null)
+                    return StatusCode(500, "The path for the directory could not be determined.");
+
+                if (!Directory.Exists(directory))
+                    Directory.CreateDirectory(directory);
+                try
+                {
+                    using (var fileStream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
+                    {
+                        fileStream.Close();
+                    }
+
+                    using (var streamWriter = new StreamWriter(filePath))
+                    {
+                        await mongoDbOperations.StreamAllCollectionExport(streamWriter, dbName, downloadGuid);
+                    }
+
+                    return Ok(fileName);
+                }
+                catch (IOException)
+                {
+                    return StatusCode(500, "The file is currently in use. Please try again later.");
+                }
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Failed to initiate database download.");
+            }
+        }
+
+
 
     }
 }

@@ -1,7 +1,7 @@
-﻿using mongodbweb.Server.Models;
+﻿using api.Models;
 using static System.Int32;
 
-namespace mongodbweb.Server.Helpers
+namespace api.Helpers
 {
     public class LogManager
     {
@@ -46,7 +46,7 @@ namespace mongodbweb.Server.Helpers
             UpdateLogFile(type, message);
             CreateExceptionLogFile(message, exception);
         }
-        
+
         public void WriteLog(LogType type, string message)
         {
             CreateDirectory();
@@ -191,7 +191,7 @@ namespace mongodbweb.Server.Helpers
                         //If line is a comment then skip
                         if (line.StartsWith("#"))
                             continue;
-                        
+
                         var log = line.Split(" | ");
                         var date = log[0].Split(".");
                         var time = log[1].Split(" ");
@@ -215,7 +215,7 @@ namespace mongodbweb.Server.Helpers
             }
             return logs;
         }
-    
+
 
         //Read Log Files form Argument LogType and DateTime if type is All read all Log Files and return a List of LogObjects
         public static List<LogObject> ReadLogFiles(string type, DateTime date)

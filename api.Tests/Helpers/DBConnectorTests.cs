@@ -1,13 +1,12 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using api.Helpers;
+using Microsoft.Extensions.Configuration;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
-namespace mongodbweb.Server.Tests.Helpers
+namespace api.Tests.Helpers
 {
     internal class DbConnectorTests
     {
-        private readonly DbConnector _dbConnector = new ();
-
         [Test]
         public void DbConnect_Is_MongoDb_Alive()
         {
@@ -16,7 +15,7 @@ namespace mongodbweb.Server.Tests.Helpers
 
             var database = client.GetDatabase("UnitTestDb");
             const string collectionName = "TestCollection";
-            
+
             if (database.ListCollectionNames().ToList().Contains(collectionName))
                 database.DropCollection(collectionName);
 
@@ -24,7 +23,7 @@ namespace mongodbweb.Server.Tests.Helpers
             var filter = new BsonDocument("name", collectionName);
             var collections = database.ListCollections(new ListCollectionsOptions { Filter = filter });
             var exists = collections.Any();
-            Assert.IsTrue(exists, "Test collection was not created.");
+            Assert.That(exists, Is.True, "Test collection was not created.");
 
             client.DropDatabase("UnitTestDb");
         }

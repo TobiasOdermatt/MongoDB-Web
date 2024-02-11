@@ -4,26 +4,32 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
-using mongodbweb.Server.Models;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Newtonsoft.Json.Linq;
+using api.Tests;
+using api.Models;
+using api.Controllers;
+using api.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
-namespace mongodbweb.Server.Tests.Controllers
+namespace api.Tests.Controllers
 {
     [TestFixture]
     public class DbControllerTests
     {
-        private readonly DbController _dbController = new();
+        private DbController _dbController;
         private HttpContext _validHttpContext = new DefaultHttpContext();
 
         [SetUp]
         public async Task Setup()
         {
+            var mockHubContext = new Moq.Mock<IHubContext<ProgressHub>>();
+            _dbController = new DbController(mockHubContext.Object);
             TestSetup.ConfigureDbConnector();
             _validHttpContext = TestSetup.GetValidHttpContext();
             var isAuthorized = await CheckAuthorization();
-            Assert.IsTrue(isAuthorized);
+            Assert.That(isAuthorized, Is.True);
             _dbController.mongoDbOperations.client = new MongoClient(TestSetup.GetConnectionString());
         }
 
@@ -33,24 +39,24 @@ namespace mongodbweb.Server.Tests.Controllers
             TestSetup.GenerateTestDb();
             var result = _dbController.ListDb() as ObjectResult;
             TestSetup.DropTestDatabase();
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
             if (result == null) return;
-            Assert.AreEqual(StatusCodes.Status200OK, result.StatusCode);
+            Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
 
             var resultValue = result.Value;
-            Assert.IsNotNull(resultValue, "Result value should not be null");
+            Assert.That(resultValue, Is.Not.Null, "Result value should not be null");
 
             var databasesProperty = resultValue?.GetType().GetProperty("databases");
-            Assert.IsNotNull(databasesProperty, "The 'databases' property should exist in the result value.");
+            Assert.That(databasesProperty, Is.Not.Null, "The 'databases' property should exist in the result value.");
 
             var databases = databasesProperty?.GetValue(resultValue) as IEnumerable;
-            Assert.IsNotNull(databases, "Databases should not be null.");
+            Assert.That(databases, Is.Not.Null, "Databases should not be null.");
             if (databases == null) return;
             var enumerable = databases as object[] ?? databases.Cast<object>().ToArray();
-            Assert.IsTrue(databases != null && enumerable.Any(), "Databases should contain elements.");
+            Assert.That(databases != null && enumerable.Any(), Is.True, "Databases should contain elements.");
             var containsUnitTestDb = enumerable.Cast<Dictionary<string, object>>()
                 .Any(db => db.ContainsKey("name") && db["name"].ToString() == "UnitTestDb");
-            Assert.IsTrue(containsUnitTestDb, "Databases should contain a database named 'UnitTestDb'.");
+            Assert.That(containsUnitTestDb, Is.True, "Databases should contain a database named 'UnitTestDb'.");
         }
 
 
@@ -59,10 +65,13 @@ namespace mongodbweb.Server.Tests.Controllers
         {
             var result = _dbController.ListCollections(string.Empty) as ObjectResult;
 
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
             if (result == null) return;
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result.StatusCode, "Status code should be 400 OK");
-            Assert.AreEqual("Database name is required.", result.Value);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest), "Status code should be 400 OK");
+                Assert.That(result.Value, Is.EqualTo("Database name is required."));
+            });
         }
 
         [Test]
@@ -71,19 +80,19 @@ namespace mongodbweb.Server.Tests.Controllers
             TestSetup.GenerateTestDb();
             var result = _dbController.ListCollections("UnitTestDb") as ObjectResult;
             TestSetup.DropTestDatabase();
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
             if (result == null) return;
-            Assert.AreEqual(StatusCodes.Status200OK, result.StatusCode);
+            Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
 
             var resultValue = result.Value;
-            Assert.IsNotNull(resultValue, "Result value should not be null");
+            Assert.That(resultValue, Is.Not.Null, "Result value should not be null");
 
             var collectionsProperty = resultValue?.GetType().GetProperty("collections");
-            Assert.IsNotNull(collectionsProperty, "The 'collections' property should exist in the result value.");
+            Assert.That(collectionsProperty, Is.Not.Null, "The 'collections' property should exist in the result value.");
 
             var collections = collectionsProperty?.GetValue(resultValue) as IEnumerable;
-            Assert.IsNotNull(collections, "Collections should not be null.");
-            Assert.IsTrue(collections != null && collections.Cast<object>().Any(),
+            Assert.That(collections, Is.Not.Null, "Collections should not be null.");
+            Assert.That(collections != null && collections.Cast<object>().Any(), Is.True,
                 "Collections should contain elements.");
         }
 
@@ -94,25 +103,25 @@ namespace mongodbweb.Server.Tests.Controllers
             var result = _dbController.GetNumberOfCollections("UnitTestDb") as ObjectResult;
             TestSetup.DropTestDatabase();
 
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
             if (result == null) return;
-            Assert.AreEqual(StatusCodes.Status200OK, result.StatusCode);
+            Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
             var resultValue = result.Value;
-            Assert.IsNotNull(resultValue);
+            Assert.That(resultValue, Is.Not.Null);
             var countProperty = resultValue?.GetType().GetProperty("count");
-            Assert.IsNotNull(countProperty, "The 'count' property should exist in the result value.");
+            Assert.That(countProperty, Is.Not.Null, "The 'count' property should exist in the result value.");
 
             var collectionCount = (int)(countProperty?.GetValue(resultValue) ?? 0);
-            Assert.IsTrue(collectionCount >= 1, "Collection count should be greater than 1.");
+            Assert.That(collectionCount >= 1, Is.True, "Collection count should be greater than 1.");
         }
-        
+
         [Test]
         public void GetNumberOfCollections_ReturnsBadRequest_WithoutDatabaseName()
         {
             var result = _dbController.GetNumberOfCollections("") as ObjectResult;
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
             if (result == null) return;
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result.StatusCode);
+            Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
         }
 
 
@@ -123,17 +132,17 @@ namespace mongodbweb.Server.Tests.Controllers
             var result = _dbController.GetCollection("UnitTestDb", "collection") as ObjectResult;
             TestSetup.DropTestDatabase();
 
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
             if (result == null) return;
-            Assert.AreEqual(StatusCodes.Status200OK, result.StatusCode);
+            Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
             var resultValue = result.Value;
-            Assert.IsNotNull(resultValue);
+            Assert.That(resultValue, Is.Not.Null);
             var collectionProperty = resultValue?.GetType().GetProperty("collection");
-            Assert.IsNotNull(collectionProperty, "The 'collection' property should exist in the result value.");
+            Assert.That(collectionProperty, Is.Not.Null, "The 'collection' property should exist in the result value.");
 
             var collection = collectionProperty?.GetValue(resultValue) as IEnumerable;
-            Assert.IsNotNull(collection, "Collection should not be null.");
-            Assert.IsTrue(collection != null && collection.Cast<object>().Any(), "Collection should contain elements.");
+            Assert.That(collection, Is.Not.Null, "Collection should not be null.");
+            Assert.That(collection != null && collection.Cast<object>().Any(), Is.True, "Collection should contain elements.");
         }
 
         [Test]
@@ -141,10 +150,13 @@ namespace mongodbweb.Server.Tests.Controllers
         {
             var result = _dbController.GetCollection(string.Empty, "collection") as ObjectResult;
 
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
             if (result == null) return;
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result.StatusCode, "Status code should be 400 OK");
-            Assert.AreEqual("Database name is required.", result.Value);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest), "Status code should be 400 OK");
+                Assert.That(result.Value, Is.EqualTo("Database name is required."));
+            });
         }
 
         [Test]
@@ -152,10 +164,13 @@ namespace mongodbweb.Server.Tests.Controllers
         {
             var result = _dbController.GetCollection("UnitTestDb", string.Empty) as ObjectResult;
 
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
             if (result == null) return;
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result.StatusCode, "Status code should be 400 OK");
-            Assert.AreEqual("Collection name is required.", result.Value);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest), "Status code should be 400 OK");
+                Assert.That(result.Value, Is.EqualTo("Collection name is required."));
+            });
         }
 
         [Test]
@@ -165,24 +180,27 @@ namespace mongodbweb.Server.Tests.Controllers
             var result = _dbController.GetCollectionAttributes("UnitTestDb", "collection") as ObjectResult;
             TestSetup.DropTestDatabase();
 
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
             if (result == null) return;
-            Assert.AreEqual(StatusCodes.Status200OK, result.StatusCode);
+            Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
             var resultValue = result.Value;
-            Assert.IsNotNull(resultValue);
+            Assert.That(resultValue, Is.Not.Null);
             var attributesProperty = resultValue?.GetType().GetProperty("attributes");
-            Assert.IsNotNull(attributesProperty, "The 'collection' property should exist in the result value.");
+            Assert.That(attributesProperty, Is.Not.Null, "The 'collection' property should exist in the result value.");
 
             var attributes = attributesProperty?.GetValue(resultValue) as IEnumerable;
-            Assert.IsNotNull(attributes, "Collection should not be null.");
+            Assert.That(attributes, Is.Not.Null, "Collection should not be null.");
             if (attributes == null) return;
             var enumerable = attributes.Cast<object>().ToList();
-            Assert.IsTrue(attributes != null && enumerable.Any(), "Collection should contain elements.");
+            Assert.That(attributes != null && enumerable.Any(), Is.True, "Collection should contain elements.");
 
             var attributeList = enumerable.Cast<string>().ToList();
-            Assert.IsTrue(attributeList.Contains("_id"), "Attribute list should contain '_id'");
-            Assert.IsTrue(attributeList.Contains("name"), "Attribute list should contain 'name'");
-            Assert.IsTrue(attributeList.Contains("email"), "Attribute list should contain 'email'");
+            Assert.Multiple(() =>
+            {
+                Assert.That(attributeList.Contains("_id"), Is.True, "Attribute list should contain '_id'");
+                Assert.That(attributeList.Contains("name"), Is.True, "Attribute list should contain 'name'");
+                Assert.That(attributeList.Contains("email"), Is.True, "Attribute list should contain 'email'");
+            });
         }
 
         [Test]
@@ -197,29 +215,31 @@ namespace mongodbweb.Server.Tests.Controllers
                 await _dbController.RenameAttributesInCollectionAsync("UnitTestDb", "collection", renameMap) as
                     ObjectResult;
 
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
             if (result == null)
                 return;
 
-            Assert.AreEqual(StatusCodes.Status200OK, result.StatusCode);
+            Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
             var resultValue = result.Value as string;
-            Assert.AreEqual("Attributes renamed successfully.", resultValue);
+            Assert.That(resultValue, Is.EqualTo("Attributes renamed successfully."));
 
             var updatedAttributes = _dbController.mongoDbOperations.GetCollectionAttributes("UnitTestDb", "collection");
             TestSetup.DropTestDatabase();
-            Assert.IsTrue(updatedAttributes.Contains("newName"), "Attribute 'newName' should exist after renaming.");
-            Assert.IsFalse(updatedAttributes.Contains("name"), "Attribute 'name' should not exist after renaming.");
+            Assert.Multiple(() =>
+            {
+                Assert.That(updatedAttributes.Contains("newName"), Is.True, "Attribute 'newName' should exist after renaming.");
+                Assert.That(updatedAttributes.Contains("name"), Is.False, "Attribute 'name' should not exist after renaming.");
+            });
         }
-
 
         [Test]
         public async Task RenameAttributesInCollectionAsync_ReturnsBadRequest_WhenDbNameIsEmpty()
         {
             var result =
                 await _dbController.RenameAttributesInCollectionAsync("", "collection",
-                    new Dictionary<string, string>()) as ObjectResult;
-            Assert.IsNotNull(result);
-            if (result != null) Assert.AreEqual(StatusCodes.Status400BadRequest, result.StatusCode);
+                    []) as ObjectResult;
+            Assert.That(result, Is.Not.Null);
+            if (result != null) Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
         }
 
         [Test]
@@ -227,9 +247,9 @@ namespace mongodbweb.Server.Tests.Controllers
         {
             var result =
                 await _dbController.RenameAttributesInCollectionAsync("UnitTestDb", "",
-                    new Dictionary<string, string>()) as ObjectResult;
-            Assert.IsNotNull(result);
-            if (result != null) Assert.AreEqual(StatusCodes.Status400BadRequest, result.StatusCode);
+                    []) as ObjectResult;
+            Assert.That(result, Is.Not.Null);
+            if (result != null) Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
         }
 
         [Test]
@@ -237,9 +257,9 @@ namespace mongodbweb.Server.Tests.Controllers
         {
             var result =
                 await _dbController.RenameAttributesInCollectionAsync("UnitTestDb", "collection",
-                    new Dictionary<string, string>()) as ObjectResult;
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result?.StatusCode);
+                    []) as ObjectResult;
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
         }
 
         [Test]
@@ -247,10 +267,13 @@ namespace mongodbweb.Server.Tests.Controllers
         {
             var result = _dbController.GetCollectionAttributes(string.Empty, "collection") as ObjectResult;
 
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
             if (result == null) return;
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result.StatusCode, "Status code should be 400 OK");
-            Assert.AreEqual("Database name is required.", result.Value);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest), "Status code should be 400 OK");
+                Assert.That(result.Value, Is.EqualTo("Database name is required."));
+            });
         }
 
         [Test]
@@ -258,10 +281,13 @@ namespace mongodbweb.Server.Tests.Controllers
         {
             var result = _dbController.GetCollectionAttributes("UnitTestDb", string.Empty) as ObjectResult;
 
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
             if (result == null) return;
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result.StatusCode, "Status code should be 400 OK");
-            Assert.AreEqual("Collection name is required.", result.Value);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest), "Status code should be 400 OK");
+                Assert.That(result.Value, Is.EqualTo("Collection name is required."));
+            });
         }
 
         [Test]
@@ -271,16 +297,16 @@ namespace mongodbweb.Server.Tests.Controllers
             var result = _dbController.GetTotalCount("UnitTestDb", "collection", "", "") as ObjectResult;
             TestSetup.DropTestDatabase();
 
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
             if (result == null) return;
-            Assert.AreEqual(StatusCodes.Status200OK, result.StatusCode);
+            Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
             var resultValue = result.Value;
-            Assert.IsNotNull(resultValue);
+            Assert.That(resultValue, Is.Not.Null);
             var totalCountProperty = resultValue?.GetType().GetProperty("totalCount");
-            Assert.IsNotNull(totalCountProperty, "The 'totalCount' property should exist in the result value.");
+            Assert.That(totalCountProperty, Is.Not.Null, "The 'totalCount' property should exist in the result value.");
 
             var collectionCount = (long)(totalCountProperty?.GetValue(resultValue) ?? 0);
-            Assert.IsTrue(collectionCount >= 1, "totalCount should be greater than 1.");
+            Assert.That(collectionCount, Is.GreaterThanOrEqualTo(1), "totalCount should be greater than 1.");
         }
 
         [Test]
@@ -290,16 +316,16 @@ namespace mongodbweb.Server.Tests.Controllers
             var result = _dbController.GetTotalCount("UnitTestDb", "collection", "email", "test") as ObjectResult;
             TestSetup.DropTestDatabase();
 
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
             if (result == null) return;
-            Assert.AreEqual(StatusCodes.Status200OK, result.StatusCode);
+            Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
             var resultValue = result.Value;
-            Assert.IsNotNull(resultValue);
+            Assert.That(resultValue, Is.Not.Null);
             var totalCountProperty = resultValue?.GetType().GetProperty("totalCount");
-            Assert.IsNotNull(totalCountProperty, "The 'totalCount' property should exist in the result value.");
+            Assert.That(totalCountProperty, Is.Not.Null, "The 'totalCount' property should exist in the result value.");
 
             var collectionCount = (long)(totalCountProperty?.GetValue(resultValue) ?? 0);
-            Assert.IsTrue(collectionCount >= 1, "totalCount should be greater than 1.");
+            Assert.That(collectionCount, Is.GreaterThanOrEqualTo(1), "totalCount should be greater than 1.");
         }
 
         [Test]
@@ -309,32 +335,32 @@ namespace mongodbweb.Server.Tests.Controllers
             var result = _dbController.GetTotalCount("UnitTestDb", "collection", "", "test") as ObjectResult;
             TestSetup.DropTestDatabase();
 
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
             if (result == null) return;
-            Assert.AreEqual(StatusCodes.Status200OK, result.StatusCode);
+            Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
             var resultValue = result.Value;
-            Assert.IsNotNull(resultValue);
+            Assert.That(resultValue, Is.Not.Null);
             var totalCountProperty = resultValue?.GetType().GetProperty("totalCount");
-            Assert.IsNotNull(totalCountProperty, "The 'totalCount' property should exist in the result value.");
+            Assert.That(totalCountProperty, Is.Not.Null, "The 'totalCount' property should exist in the result value.");
 
             var collectionCount = (long)(totalCountProperty?.GetValue(resultValue) ?? 0);
-            Assert.IsTrue(collectionCount >= 1, "totalCount should be greater than 1.");
+            Assert.That(collectionCount >= 1, Is.True, "totalCount should be greater than 1.");
         }
 
         [Test]
         public void GetTotalCount_ReturnsBadRequest_WhenDbNameIsEmpty()
         {
             var result = _dbController.GetTotalCount("", "collection", "key", "value") as ObjectResult;
-            Assert.IsNotNull(result);
-            if (result != null) Assert.AreEqual(StatusCodes.Status400BadRequest, result.StatusCode);
+            Assert.That(result, Is.Not.Null);
+            if (result != null) Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
         }
 
         [Test]
         public void GetTotalCount_ReturnsBadRequest_WhenCollectionNameIsEmpty()
         {
             var result = _dbController.GetTotalCount("UnitTestDb", "", "key", "value") as ObjectResult;
-            Assert.IsNotNull(result);
-            if (result != null) Assert.AreEqual(StatusCodes.Status400BadRequest, result.StatusCode);
+            Assert.That(result, Is.Not.Null);
+            if (result != null) Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
         }
 
         [Test]
@@ -342,18 +368,24 @@ namespace mongodbweb.Server.Tests.Controllers
         {
             var result =
                 _dbController.GetPaginatedCollection("", "collectionName", 0, 10, "key", "value") as ObjectResult;
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result?.StatusCode);
-            Assert.AreEqual("Database name is required.", result?.Value);
+            Assert.That(result, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+                Assert.That(result?.Value, Is.EqualTo("Database name is required."));
+            });
         }
 
         [Test]
         public void GetPaginatedCollection_ReturnsBadRequest_WhenCollectionNameIsEmpty()
         {
             var result = _dbController.GetPaginatedCollection("UnitTestDb", "", 0, 10, "key", "value") as ObjectResult;
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result?.StatusCode);
-            Assert.AreEqual("Collection name is required.", result?.Value);
+            Assert.That(result, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+                Assert.That(result?.Value, Is.EqualTo("Collection name is required."));
+            });
         }
 
         [Test]
@@ -361,9 +393,12 @@ namespace mongodbweb.Server.Tests.Controllers
         {
             var result =
                 _dbController.GetPaginatedCollection("dbName", "collectionName", 0, 10, "key", "value") as ObjectResult;
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status404NotFound, result?.StatusCode);
-            Assert.AreEqual($"No data found in collection 'collectionName' in database 'dbName'.", result?.Value);
+            Assert.That(result, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status404NotFound));
+                Assert.That(result?.Value, Is.EqualTo($"No data found in collection 'collectionName' in database 'dbName'."));
+            });
         }
 
         [Test]
@@ -374,8 +409,8 @@ namespace mongodbweb.Server.Tests.Controllers
                 _dbController.GetPaginatedCollection("UnitTestDb", "collection", 0, 10, "email",
                     "test") as ObjectResult;
             TestSetup.DropTestDatabase();
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status200OK, result?.StatusCode);
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
             var resultValue = result?.Value as dynamic;
             Assert.IsNotNull(resultValue);
         }
@@ -387,8 +422,8 @@ namespace mongodbweb.Server.Tests.Controllers
             var result =
                 _dbController.GetPaginatedCollection("UnitTestDb", "collection", 0, 10, "", "test") as ObjectResult;
             TestSetup.DropTestDatabase();
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status200OK, result?.StatusCode);
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
             var resultValue = result?.Value as dynamic;
             Assert.IsNotNull(resultValue);
         }
@@ -397,20 +432,26 @@ namespace mongodbweb.Server.Tests.Controllers
         public void GetCollectionCount_ReturnsBadRequest_WhenDbNameIsEmpty()
         {
             var result = _dbController.GetCollectionCount("", "collectionName", "key", "value") as ObjectResult;
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
             if (result == null) return;
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result.StatusCode);
-            Assert.AreEqual("Database name is required.", result.Value);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+                Assert.That(result.Value, Is.EqualTo("Database name is required."));
+            });
         }
 
         [Test]
         public void GetCollectionCount_ReturnsBadRequest_WhenCollectionNameIsEmpty()
         {
             var result = _dbController.GetCollectionCount("UnitTestDb", "", "key", "value") as ObjectResult;
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
             if (result == null) return;
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result.StatusCode);
-            Assert.AreEqual("Collection name is required.", result.Value);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+                Assert.That(result.Value, Is.EqualTo("Collection name is required."));
+            });
         }
 
         [Test]
@@ -419,15 +460,15 @@ namespace mongodbweb.Server.Tests.Controllers
             TestSetup.GenerateTestDb();
             var result = _dbController.GetCollectionCount("UnitTestDb", "collection", "email", "test") as ObjectResult;
             TestSetup.DropTestDatabase();
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status200OK, result?.StatusCode);
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
             var resultValue = result?.Value as dynamic;
             Assert.IsNotNull(resultValue);
             var totalCountProperty = resultValue?.GetType().GetProperty("count");
             Assert.IsNotNull(totalCountProperty, "The 'count' property should exist in the result value.");
 
             var collectionCount = (long)(totalCountProperty?.GetValue(resultValue) ?? 0);
-            Assert.IsTrue(collectionCount == 1, "documents count should be 1.");
+            Assert.That(collectionCount == 1, Is.True, "documents count should be 1.");
         }
 
         [Test]
@@ -436,18 +477,19 @@ namespace mongodbweb.Server.Tests.Controllers
             dynamic document = new { Name = "Test", Value = "123" };
             var result =
                 await _dbController.InsertDocumentAsync("UnitTestDb", "newCollection", document) as ObjectResult;
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status200OK, result?.StatusCode);
-            Assert.AreEqual("Document inserted successfully.", result?.Value);
-
+            Assert.That(result, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
+                Assert.That(result?.Value, Is.EqualTo("Document inserted successfully."));
+            });
             var collection = _dbController.mongoDbOperations.client.GetDatabase("UnitTestDb")
                 .GetCollection<BsonDocument>("newCollection");
             var insertedDocument = collection.Find(new BsonDocument("Name", "Test")).FirstOrDefault();
             TestSetup.DropTestDatabase();
-            Assert.IsNotNull(insertedDocument);
-            Assert.AreEqual("123", insertedDocument["Value"].AsString);
+            Assert.That(insertedDocument, Is.Not.Null);
+            Assert.That(insertedDocument["Value"].AsString, Is.EqualTo("123"));
         }
-
 
         [Test]
         public async Task InsertDocumentAsync_ReturnsBadRequest_WhenDbNameIsEmpty()
@@ -456,9 +498,12 @@ namespace mongodbweb.Server.Tests.Controllers
 
             var result = await _dbController.InsertDocumentAsync("", "test", document) as ObjectResult;
 
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result?.StatusCode);
-            Assert.AreEqual("Database name is required.", result?.Value);
+            Assert.That(result, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+                Assert.That(result?.Value, Is.EqualTo("Database name is required."));
+            });
         }
 
         [Test]
@@ -468,9 +513,12 @@ namespace mongodbweb.Server.Tests.Controllers
 
             var result = await _dbController.InsertDocumentAsync("test", "", document) as ObjectResult;
 
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result?.StatusCode);
-            Assert.AreEqual("Collection name is required.", result?.Value);
+            Assert.That(result, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+                Assert.That(result?.Value, Is.EqualTo("Collection name is required."));
+            });
         }
 
         [Test]
@@ -479,12 +527,15 @@ namespace mongodbweb.Server.Tests.Controllers
             dynamic? document = null;
             var result = await _dbController.InsertDocumentAsync("test", "test", document) as ObjectResult;
 
-            Assert.IsNotNull(result, "Result should not be null.");
-            Assert.IsInstanceOf<ObjectResult>(result, "Result should be an instance of ObjectResult.");
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result?.StatusCode,
-                "Status code should be 400 BadRequest.");
-            Assert.AreEqual("Document is required.", result?.Value,
-                "The error message should indicate that the document is required.");
+            Assert.That(result, Is.Not.Null, "Result should not be null.");
+            Assert.That(result, Is.InstanceOf<ObjectResult>(), "Result should be an instance of ObjectResult.");
+            Assert.Multiple(() =>
+            {
+                Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest),
+                            "Status code should be 400 BadRequest.");
+                Assert.That(result?.Value, Is.EqualTo("Document is required."),
+                    "The error message should indicate that the document is required.");
+            });
         }
 
         [Test]
@@ -492,10 +543,13 @@ namespace mongodbweb.Server.Tests.Controllers
         {
             var result = _dbController.DeleteDatabase(string.Empty) as ObjectResult;
 
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
             if (result == null) return;
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result.StatusCode);
-            Assert.AreEqual("Database name is required.", result.Value);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+                Assert.That(result.Value, Is.EqualTo("Database name is required."));
+            });
         }
 
         [Test]
@@ -505,10 +559,13 @@ namespace mongodbweb.Server.Tests.Controllers
             var result = _dbController.DeleteDatabase("UnitTestDb") as ObjectResult;
             TestSetup.DropTestDatabase();
 
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
             if (result == null) return;
-            Assert.AreEqual(StatusCodes.Status200OK, result.StatusCode);
-            Assert.AreEqual($"Database 'UnitTestDb' deleted successfully.", result.Value);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
+                Assert.That(result.Value, Is.EqualTo($"Database 'UnitTestDb' deleted successfully."));
+            });
         }
 
         [Test]
@@ -516,10 +573,13 @@ namespace mongodbweb.Server.Tests.Controllers
         {
             var result = _dbController.CreateCollection(string.Empty, "TestCollection") as ObjectResult;
 
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
             if (result == null) return;
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result.StatusCode);
-            Assert.AreEqual("Database name is required.", result.Value);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+                Assert.That(result.Value, Is.EqualTo("Database name is required."));
+            });
         }
 
         [Test]
@@ -527,10 +587,13 @@ namespace mongodbweb.Server.Tests.Controllers
         {
             var result = _dbController.CreateCollection("TestDb", string.Empty) as ObjectResult;
 
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
             if (result == null) return;
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result.StatusCode);
-            Assert.AreEqual("Collection name is required.", result.Value);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+                Assert.That(result.Value, Is.EqualTo("Collection name is required."));
+            });
         }
 
         [Test]
@@ -539,10 +602,12 @@ namespace mongodbweb.Server.Tests.Controllers
             TestSetup.DropTestDatabase();
             var result = _dbController.CreateCollection("UnitTestDb", "TestCollection") as ObjectResult;
             TestSetup.DropTestDatabase();
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status200OK, result?.StatusCode);
-            Assert.AreEqual("Collection 'TestCollection' created successfully in database 'UnitTestDb'.",
-                result?.Value);
+            Assert.That(result, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
+                Assert.That(result?.Value, Is.EqualTo("Collection 'TestCollection' created successfully in database 'UnitTestDb'."));
+            });
         }
 
         [Test]
@@ -550,10 +615,13 @@ namespace mongodbweb.Server.Tests.Controllers
         {
             var result = _dbController.DeleteCollection(string.Empty, "TestCollection") as ObjectResult;
 
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
             if (result == null) return;
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result.StatusCode);
-            Assert.AreEqual("Database name is required.", result.Value);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+                Assert.That(result.Value, Is.EqualTo("Database name is required."));
+            });
         }
 
         [Test]
@@ -561,10 +629,13 @@ namespace mongodbweb.Server.Tests.Controllers
         {
             var result = _dbController.DeleteCollection("TestDb", string.Empty) as ObjectResult;
 
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
             if (result == null) return;
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result.StatusCode);
-            Assert.AreEqual("Collection name is required.", result.Value);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+                Assert.That(result.Value, Is.EqualTo("Collection name is required."));
+            });
         }
 
         [Test]
@@ -572,11 +643,13 @@ namespace mongodbweb.Server.Tests.Controllers
         {
             var result = _dbController.DeleteCollection("TestDb", "TestCollection") as ObjectResult;
 
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
             if (result == null) return;
-            Assert.AreEqual(StatusCodes.Status200OK, result.StatusCode);
-            Assert.AreEqual("Collection 'TestCollection' deleted successfully from database 'TestDb'.",
-                result.Value);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
+                Assert.That(result.Value, Is.EqualTo("Collection 'TestCollection' deleted successfully from database 'TestDb'."));
+            });
         }
 
         [Test]
@@ -584,9 +657,12 @@ namespace mongodbweb.Server.Tests.Controllers
         {
             var result = _dbController.GetDatabaseStatistics(string.Empty) as ObjectResult;
 
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result?.StatusCode);
-            Assert.AreEqual("Database name is required.", result?.Value);
+            Assert.That(result, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+                Assert.That(result?.Value, Is.EqualTo("Database name is required."));
+            });
         }
 
         [Test]
@@ -594,8 +670,8 @@ namespace mongodbweb.Server.Tests.Controllers
         {
             var result = _dbController.GetDatabaseStatistics("TestDb") as ObjectResult;
 
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status200OK, result?.StatusCode);
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
         }
 
         [Test]
@@ -603,9 +679,12 @@ namespace mongodbweb.Server.Tests.Controllers
         {
             var result = _dbController.GetCollectionStatistics(string.Empty, "TestCollection") as ObjectResult;
 
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result?.StatusCode);
-            Assert.AreEqual("Database name is required.", result?.Value);
+            Assert.That(result, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+                Assert.That(result?.Value, Is.EqualTo("Database name is required."));
+            });
         }
 
         [Test]
@@ -613,9 +692,12 @@ namespace mongodbweb.Server.Tests.Controllers
         {
             var result = _dbController.GetCollectionStatistics("TestDb", string.Empty) as ObjectResult;
 
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result?.StatusCode);
-            Assert.AreEqual("Collection name is required.", result?.Value);
+            Assert.That(result, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+                Assert.That(result?.Value, Is.EqualTo("Collection name is required."));
+            });
         }
 
         [Test]
@@ -623,8 +705,8 @@ namespace mongodbweb.Server.Tests.Controllers
         {
             var result = _dbController.GetCollectionStatistics("TestDb", "TestCollection") as ObjectResult;
 
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status200OK, result?.StatusCode);
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
         }
 
         [Test]
@@ -632,8 +714,8 @@ namespace mongodbweb.Server.Tests.Controllers
         {
             var result = _dbController.GetGlobalStatistics() as ObjectResult;
 
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status200OK, result?.StatusCode);
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
         }
 
         [Test]
@@ -641,9 +723,12 @@ namespace mongodbweb.Server.Tests.Controllers
         {
             var result = _dbController.CheckIfDatabaseExists(string.Empty) as ObjectResult;
 
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result?.StatusCode);
-            Assert.AreEqual("Database name is required.", result?.Value);
+            Assert.That(result, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+                Assert.That(result?.Value, Is.EqualTo("Database name is required."));
+            });
         }
 
         [Test]
@@ -651,18 +736,18 @@ namespace mongodbweb.Server.Tests.Controllers
         {
             var result = _dbController.CheckIfDatabaseExists("NonExistentDb") as ObjectResult;
 
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
             if (result == null) return;
-            Assert.AreEqual(StatusCodes.Status200OK, result.StatusCode);
+            Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
 
             var resultValue = result.Value;
-            Assert.IsNotNull(resultValue, "Result value should not be null");
+            Assert.That(resultValue, Is.Not.Null, "Result value should not be null");
 
             var existsProperty = resultValue?.GetType().GetProperty("exists");
-            Assert.IsNotNull(existsProperty, "The 'exists' property should exist in the result value.");
+            Assert.That(existsProperty, Is.Not.Null, "The 'exists' property should exist in the result value.");
 
             var exists = (bool)(existsProperty?.GetValue(resultValue) ?? false);
-            Assert.IsFalse(exists, "The database should not exist.");
+            Assert.That(exists, Is.False, "The database should not exist.");
         }
 
         [Test]
@@ -671,18 +756,18 @@ namespace mongodbweb.Server.Tests.Controllers
             TestSetup.GenerateTestDb();
             var result = _dbController.CheckIfDatabaseExists("UnitTestDb") as ObjectResult;
             TestSetup.DropTestDatabase();
-            Assert.IsNotNull(result);
+            Assert.That(result, Is.Not.Null);
             if (result == null) return;
-            Assert.AreEqual(StatusCodes.Status200OK, result.StatusCode);
+            Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
             if (result.Value == null) return;
             var resultValue = result.Value;
-            Assert.IsNotNull(resultValue, "Result value should not be null");
+            Assert.That(resultValue, Is.Not.Null, "Result value should not be null");
 
             var existsProperty = resultValue?.GetType().GetProperty("exists");
-            Assert.IsNotNull(existsProperty, "The 'exists' property should exist in the result value.");
+            Assert.That(existsProperty, Is.Not.Null, "The 'exists' property should exist in the result value.");
 
             var exists = (bool)(existsProperty?.GetValue(resultValue) ?? false);
-            Assert.IsTrue(exists, "The database should  exist.");
+            Assert.That(exists, Is.True, "The database should  exist.");
         }
 
         [Test]
@@ -692,9 +777,12 @@ namespace mongodbweb.Server.Tests.Controllers
                 await _dbController.UploadJsonAsync(string.Empty, "TestCollection", new JObject(), false) as
                     ObjectResult;
 
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result?.StatusCode);
-            Assert.AreEqual("Database name is required.", result?.Value);
+            Assert.That(result, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+                Assert.That(result?.Value, Is.EqualTo("Database name is required."));
+            });
         }
 
         [Test]
@@ -703,9 +791,12 @@ namespace mongodbweb.Server.Tests.Controllers
             var result =
                 await _dbController.UploadJsonAsync("TestDb", string.Empty, new JObject(), false) as ObjectResult;
 
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result?.StatusCode);
-            Assert.AreEqual("Collection name is required.", result?.Value);
+            Assert.That(result, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+                Assert.That(result?.Value, Is.EqualTo("Collection name is required."));
+            });
         }
 
         [Test]
@@ -713,9 +804,12 @@ namespace mongodbweb.Server.Tests.Controllers
         {
             var result = await _dbController.UploadJsonAsync("TestDb", "TestCollection", null, false) as ObjectResult;
 
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result?.StatusCode);
-            Assert.AreEqual("JSON content is required.", result?.Value);
+            Assert.That(result, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+                Assert.That(result?.Value, Is.EqualTo("JSON content is required."));
+            });
         }
 
         [Test]
@@ -724,9 +818,12 @@ namespace mongodbweb.Server.Tests.Controllers
             var result =
                 await _dbController.UploadJsonAsync("TestDb", "TestCollection", new JObject(), false) as ObjectResult;
 
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status200OK, result?.StatusCode);
-            Assert.AreEqual("JSON uploaded successfully.", result?.Value);
+            Assert.That(result, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
+                Assert.That(result?.Value, Is.EqualTo("JSON uploaded successfully."));
+            });
         }
 
         [Test]
@@ -734,9 +831,12 @@ namespace mongodbweb.Server.Tests.Controllers
         {
             var result = await _dbController.ExecuteMongoQuery(string.Empty, "TestCollection", "query") as ObjectResult;
 
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result?.StatusCode);
-            Assert.AreEqual("Database name is required.", result?.Value);
+            Assert.That(result, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+                Assert.That(result?.Value, Is.EqualTo("Database name is required."));
+            });
         }
 
         [Test]
@@ -744,9 +844,12 @@ namespace mongodbweb.Server.Tests.Controllers
         {
             var result = await _dbController.ExecuteMongoQuery("TestDb", string.Empty, "query") as ObjectResult;
 
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result?.StatusCode);
-            Assert.AreEqual("Collection name is required.", result?.Value);
+            Assert.That(result, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+                Assert.That(result?.Value, Is.EqualTo("Collection name is required."));
+            });
         }
 
         [Test]
@@ -755,9 +858,12 @@ namespace mongodbweb.Server.Tests.Controllers
             var result =
                 await _dbController.ExecuteMongoQuery("TestDb", "TestCollection", string.Empty) as ObjectResult;
 
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result?.StatusCode);
-            Assert.AreEqual("Query is required.", result?.Value);
+            Assert.That(result, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+                Assert.That(result?.Value, Is.EqualTo("Query is required."));
+            });
         }
 
         [Test]
@@ -768,8 +874,8 @@ namespace mongodbweb.Server.Tests.Controllers
                 await _dbController.ExecuteMongoQuery("UnitTestDb", "collection", "{ \"age\": { \"$gt\": 25 } }") as
                     ObjectResult;
 
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status200OK, result?.StatusCode);
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
         }
 
         [Test]
@@ -779,9 +885,12 @@ namespace mongodbweb.Server.Tests.Controllers
                 await _dbController.UpdateMongoDb(string.Empty, "TestCollection", "1", CreateValidUpdateObject()) as
                     ObjectResult;
 
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result?.StatusCode);
-            Assert.AreEqual("Database name is required.", result?.Value);
+            Assert.That(result, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+                Assert.That(result?.Value, Is.EqualTo("Database name is required."));
+            });
         }
 
         [Test]
@@ -791,9 +900,12 @@ namespace mongodbweb.Server.Tests.Controllers
                 await _dbController.UpdateMongoDb("TestDb", string.Empty, "1", CreateValidUpdateObject()) as
                     ObjectResult;
 
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result?.StatusCode);
-            Assert.AreEqual("Collection name is required.", result?.Value);
+            Assert.That(result, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+                Assert.That(result?.Value, Is.EqualTo("Collection name is required."));
+            });
         }
 
         [Test]
@@ -803,9 +915,12 @@ namespace mongodbweb.Server.Tests.Controllers
                 await _dbController.UpdateMongoDb("TestDb", "TestCollection", string.Empty, CreateValidUpdateObject())
                     as ObjectResult;
 
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result?.StatusCode);
-            Assert.AreEqual("Document ID is required.", result?.Value);
+            Assert.That(result, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+                Assert.That(result?.Value, Is.EqualTo("Document ID is required."));
+            });
         }
 
         [Test]
@@ -816,9 +931,12 @@ namespace mongodbweb.Server.Tests.Controllers
             var result =
                 await _dbController.UpdateMongoDb("TestDb", "TestCollection", "1", invalidUpdateObject) as ObjectResult;
 
-            Assert.IsNotNull(result);
-            Assert.AreEqual(StatusCodes.Status400BadRequest, result?.StatusCode);
-            Assert.AreEqual("Differences and rename map are required.", result?.Value);
+            Assert.That(result, Is.Not.Null);
+            Assert.Multiple(() =>
+            {
+                Assert.That(result?.StatusCode, Is.EqualTo(StatusCodes.Status400BadRequest));
+                Assert.That(result?.Value, Is.EqualTo("Differences and rename map are required."));
+            });
         }
 
         [Test]
@@ -831,26 +949,28 @@ namespace mongodbweb.Server.Tests.Controllers
                 var updateObject = CreateValidUpdateObject();
                 var result = await _dbController.UpdateMongoDb("UnitTestDb", "collection", documentId, updateObject) as ObjectResult;
 
-                Assert.IsNotNull(result);
+                Assert.That(result, Is.Not.Null);
                 if (result != null)
                 {
-                    Assert.AreEqual(StatusCodes.Status200OK, result.StatusCode);
-                    Assert.IsTrue(result.Value != null && result.Value.ToString()!.Contains("updated successfully"));
-                    
+                    Assert.Multiple(() =>
+                    {
+                        Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
+                        Assert.That(result.Value != null && result.Value.ToString()!.Contains("updated successfully"), Is.True);
+                    });
                     var updatedDocument = await GetDocumentById("UnitTestDb", "collection", documentId);
-                    Assert.IsNotNull(updatedDocument);
-                    Assert.AreEqual("John Doe", updatedDocument?["nameChanged"].AsString);
+                    Assert.That(updatedDocument, Is.Not.Null);
+                    Assert.That(updatedDocument?["nameChanged"].AsString, Is.EqualTo("John Doe"));
                 }
             }
         }
-        
+
         private async Task<bool> CheckAuthorization()
         {
             _dbController.ControllerContext = new ControllerContext()
             {
                 HttpContext = _validHttpContext
             };
-            var authorizationFilter = new mongodbweb.Server.Filters.Authorization();
+            var authorizationFilter = new api.Filters.Authorization();
 
             var actionContext = new ActionContext(_validHttpContext, new RouteData(), new ActionDescriptor());
             var actionExecutingContext = new ActionExecutingContext(actionContext, new List<IFilterMetadata>(),
@@ -866,7 +986,7 @@ namespace mongodbweb.Server.Tests.Controllers
             Assert.IsNull(actionExecutingContext.Result, "User is not authorized");
             return actionExecutingContext.Result == null;
         }
-        
+
         private static UpdateMongoDbObject CreateValidUpdateObject()
         {
             return new UpdateMongoDbObject
@@ -892,7 +1012,7 @@ namespace mongodbweb.Server.Tests.Controllers
                 return null;
             }
         }
-        
+
         private async Task<BsonDocument?> GetDocumentById(string dbName, string collectionName, string id)
         {
             var database = _dbController.mongoDbOperations.client.GetDatabase(dbName);

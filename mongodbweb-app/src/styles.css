@@ -23,6 +23,17 @@
   --danger-background: #f1d0d0;
 }
 
+.page {
+  background-color: var(--background) !important;
+  color: var(--font-color) !important;
+}
+
+.table {
+  background-color: var(--background) !important;
+  color: var(--font-color) !important;
+  --bs-table-color: unset;
+  --bs-table-bg: unset;
+}
 
 .dark-mode {
   background-color: var(--background) !important;
@@ -33,3 +44,77 @@
   background-color: var(--background) !important;
   color: var(--font-color) !important;
 }
+
+.blacktowhitetheme {
+  filter: brightness(0) invert(var(--colornumber));
+}
+
+.whitetoblacktheme {
+  filter: brightness(1) invert(var(--colornumber));
+}
+
+.btn-primary {
+  color: #fff;
+  background-color: #223b4f;
+  border-color: #152f4b;
+}
+
+html, body {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: var(--font-color) !important;
+}
+
+.danger-background {
+  background-color: var(--danger-background) !important;
+}
+
+.element-background {
+  background-color: var(--third-color) !important;
+  color: var(--font-color) !important;
+}
+
+.dropdown-item:hover {
+  background-color: var(--secound-color) !important;
+  color: var(--font-color) !important;
+}
+
+.modal-content {
+  color: var(--font-color);
+  border: none !important;
+}
+
+.modal-header {
+  background-color: var(--third-color);
+  border-bottom: 1px solid var(--secound-color);
+}
+
+.modal-body {
+  background-color: var(--fifth-color);
+}
+
+.modal-footer {
+  background-color: var(--third-color) !important;
+  border-top: 1px solid var(--secound-color);
+}
+
+.toast-container .ngx-toastr {
+  box-shadow: 0 0 12px var(--secound-text-color) !important;
+}
+
+.btn-close:focus {
+  box-shadow: none;
+}
+
+input {
+  background-color: var(--background) !important;
+  color: var(--font-color) !important;
+}
+
+.deleteicon {
+  right: 0.3rem;
+  top: 0.6rem;
+  position: absolute;
+}
+
+
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

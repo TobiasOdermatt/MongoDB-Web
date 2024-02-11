@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using mongodbweb.Server.Filters;
-using mongodbweb.Server.Helpers;
+﻿using api.Helpers;
+using Microsoft.AspNetCore.Mvc;
+using api.Filters;
 
-namespace mongodbweb.Server.Controllers;
+namespace api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
@@ -14,20 +14,20 @@ public class EnvController
     {
         return true;
     }
-    
+
     [HttpGet("IsAuthorized")]
     [Authorization]
     public ActionResult<bool> IsAuthorized()
     {
         return true;
     }
-    
+
     [HttpGet("IsAuthorizationEnabled")]
     public ActionResult<bool> IsAuthorizationEnabled()
     {
         return ConfigManager.useAuthorization;
     }
-    
+
     [HttpGet("isFirstStart")]
     public ActionResult<bool> IsFirstStart()
     {
