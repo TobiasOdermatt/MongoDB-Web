@@ -12,6 +12,8 @@ import { v4 as uuidv4 } from 'uuid';
 export class DbCardComponent {
   @Input() db: any;
   @Output() downloadRequest = new EventEmitter<{ dbName: string, guid: string }>();
+  @Output() updateDatabases = new EventEmitter();
+
   statsKeys: string[] = [];
   typedDbName: string = '';
   progress: number = 0; 
@@ -64,6 +66,7 @@ export class DbCardComponent {
       if (response.success) {
         console.log('Database deleted successfully', response.message);
         this.toastr.info('Database deleted successfully', this.db.name);
+        this.updateDatabases.emit();
       } else {
         console.error('There was an error deleting the database', response.message);
       }
