@@ -7,4 +7,9 @@
     <!-- Folder where production build objects will be placed -->
     <PublishAssetsDirectory>$(MSBuildProjectDirectory)\dist\mongodbweb.client\</PublishAssetsDirectory>
   </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="src\app\dashboard\components\delete-modal\" />
+    <Folder Include="src\app\dashboard\components\create-collection-modal\" />
+    <Folder Include="src\app\dashboard\components\download-modal\" />
+  </ItemGroup>
 </Project>

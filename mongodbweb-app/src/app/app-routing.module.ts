@@ -4,7 +4,7 @@ import { DashboardComponent } from "./dashboard/dashboard.component";
 import { LoginComponent } from "./login/login.component";
 import { canActivate } from './shared/service/auth-guard.service';
 import { GloablStatisticComponent } from './gloabl-statistic/gloabl-statistic.component';
-import { CollectionListComponent } from './dashboard/components/containers/collection-list/collection-list.component';
+import { CollectionListComponent } from './dashboard/containers/collection-list/collection-list.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
