@@ -26,7 +26,7 @@ export class DatabaseService {
       console.error('Database name is required.');
       return of(null);
     }
-    return this.http.get(`api/Db/databaseStatistics/${dbName}`)
+    return this.http.get<any>(`api/Db/databaseStatistics/${dbName}`)
       .pipe(
         catchError((error: HttpErrorResponse) => {
           console.error(`Error fetching statistics for database '${dbName}'`, error);

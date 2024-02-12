@@ -246,7 +246,8 @@ namespace api.Controllers
             if (stats == null)
                 return NotFound($"Failed to fetch statistics for database '{dbName}'.");
 
-            return Ok(stats.ToJson());
+            var statsDict = stats.Elements.ToDictionary(element => element.Name, element => BsonTypeMapper.MapToDotNetValue(element.Value));
+            return Ok(new { databaseStatistics = statsDict });
         }
 
         [HttpGet("collectionStatistics/{dbName}/{collectionName}")]
@@ -262,7 +263,8 @@ namespace api.Controllers
             if (stats == null)
                 return NotFound($"Failed to fetch statistics for collection '{collectionName}' in database '{dbName}'.");
 
-            return Ok(stats.ToJson());
+            var statsDict = stats.Elements.ToDictionary(element => element.Name, element => BsonTypeMapper.MapToDotNetValue(element.Value));
+            return Ok(new { collectionStatistics = statsDict });
         }
 
         [HttpGet("globalStatistics")]
