@@ -1,5 +1,4 @@
 <h3>Global Statistics</h3>
-
 <div *ngIf="stats; else loading">
   <table>
     <thead>
@@ -17,5 +16,6 @@
   </table>
 </div>
 <ng-template #loading>
-  <p>Failed to fetch statistics.</p>
+
+  <p>Loading statistic</p>
 </ng-template>

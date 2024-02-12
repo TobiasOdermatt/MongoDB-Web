@@ -55,12 +55,12 @@ export class DashboardComponent implements OnInit {
 
           updatedDbList.forEach(db => {
             this.dbService.getDatabaseStatistics(db.name).subscribe({
-              next: (stats) => {
+              next: (response) => {
                 const dbIndex = this.databaseList.findIndex(d => d.name === db.name);
                 if (dbIndex !== -1) {
-                  this.databaseList[dbIndex] = { ...db, stats: stats };
+                  this.databaseList[dbIndex] = { ...db, stats: response.databaseStatistics };
                 } else {
-                  this.databaseList.push({ ...db, stats: stats });
+                  this.databaseList.push({ ...db, stats: response.databaseStatistics });
                 }
               },
               error: (error) => {
@@ -85,11 +85,8 @@ export class DashboardComponent implements OnInit {
   }
 
   createCollection() {
+    if (!this.isNameValid()) return;
     this.modalService.dismissAll();
-    if (!this.newDbName || !this.newCollectionName) {
-      this.logAndToastError('Database name and collection name are required.');
-      return;
-    }
 
     this.dbService.createCollection(this.newDbName, this.newCollectionName).subscribe({
       next: (response) => {
@@ -104,6 +101,19 @@ export class DashboardComponent implements OnInit {
         this.logAndToastError(`Error creating collection '${this.newCollectionName}' in database '${this.newDbName}'`, error);
       }
     });
+  }
+
+  isNameValid() {
+    if (!this.newDbName.trim() || this.newDbName.length >= 64 || !this.newCollectionName.trim() || this.newCollectionName.length >= 64) {
+      this.toastr.info('Database and collection names must be between 1 and 63 characters.');
+      return false;
+    }
+    const invalidChars = /[\/\."$*<>:|?\x00 ]/; 
+    if (invalidChars.test(this.newDbName) || invalidChars.test(this.newCollectionName)) {
+      this.toastr.info('Names cannot contain /\\. "$*<>:|? or the null character.');
+      return false;
+    }
+    return true;
   }
 
   async handleDownloadRequest(event: { dbName: string, guid: string }) {
@@ -142,6 +152,15 @@ export class DashboardComponent implements OnInit {
 
   logAndToastError(message: string, error?: any) {
     console.error(message, error);
-    this.toastr.error('Failed to initiate download');
+    this.toastr.error(message);
   }
+
+  handleFileDrop(any) {
+
+  }
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+  }
+
+
 }

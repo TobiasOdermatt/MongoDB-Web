@@ -5,3 +5,12 @@
 ::placeholder {
   color: var(--secound-text-color);
 }
+
+.drop-area {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px dashed var(--font-color);
+  padding: 80px;
+  cursor: pointer;
+}
