@@ -13,8 +13,3 @@
 .card-body {
   font-size: 0.95rem;
 }
-
-::placeholder {
-  color: var(--secound-text-color);
-}
-

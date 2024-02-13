@@ -1,0 +1,13 @@
+<div class="modal-header">
+    <h5 class="modal-title">Are you absolutely sure?</h5>
+    <button type="button" class="close btn-close blacktowhitetheme" aria-label="Close" (click)="onCloseModal()"></button>
+  </div>
+  <div class="modal-body">
+    <p>Warning: This action cannot be undone. <br /> This will permanently delete the <b>"{{entityValue}}"</b> {{entityType}}.</p>
+    <p>Please retype the {{entityType}} name to confirm.</p>
+    <input type="text" class="form-control" [(ngModel)]="typedEntityValueConfirmation" [placeholder]="entityType + ' name'">
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-danger" [disabled]="typedEntityValueConfirmation !== entityValue" (click)="onConfirmDelete()">Delete</button>
+  </div>
+  

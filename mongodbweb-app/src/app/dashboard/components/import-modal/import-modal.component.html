@@ -1,0 +1,14 @@
+<div class="modal-header">
+    <h5 class="modal-title">Import database or collection</h5>
+    <button type="button" class="close btn-close blacktowhitetheme" (click)="closeModal.emit()" aria-label="Close"></button>
+</div>
+<div class="modal-body">
+    <p>Ensure your file is in .json format before uploading.</p>
+    <input type="file" #fileInput style="display: none" (change)="onFileSelected($event)" accept=".json" />
+    <div class="drop-area" (drop)="handleFileDrop($event)" (dragover)="onDragOver($event)" (click)="triggerFileInput(fileInput)">
+    <p class="file-name">{{ fileName ? fileName : ' Drop your file here for uploading or simply click this section to start.' }}</p>
+    </div>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-success"  [disabled]="!fileName">Next</button>
+</div>

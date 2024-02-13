@@ -1,0 +1,14 @@
+    <div class="modal-header">
+      <h5 class="modal-title">Create new collection</h5>
+      <button type="button" class="close btn-close blacktowhitetheme" aria-label="Close" (click)="onCloseModal()"></button>
+    </div>
+    <div class="modal-body">
+      <p> Please type the database name</p>
+      <input type="text" class="form-control page" placeholder="database name" required [(ngModel)]="newDbName" min="1" max="63">
+      <br>
+      <p> Please type the collection name</p>
+      <input type="text" class="form-control page" placeholder="collection name" required [(ngModel)]="newCollectionName" min="1" max="63">
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-success" (click)="create()" [disabled]="newDbName===''||newCollectionName===''">Create collection</button>
+    </div>

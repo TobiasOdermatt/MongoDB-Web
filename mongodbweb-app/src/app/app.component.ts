@@ -1,18 +1,23 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
+import { ProgressService } from './shared/service/progress.service';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
 export class AppComponent implements OnInit {
-  constructor(private http: HttpClient) {}
+  title = 'MongoDB Web';
+
+  constructor(private progressService: ProgressService) { }
 
   ngOnInit() {
     const savedTheme = this.getCookie('theme');
     if (savedTheme) {
       this.setTheme(savedTheme);
     }
+    this.progressService.startConnection().then(() => {
+    });
   }
   onThemeChange(event: Event) {
     const selectedTheme = (event.target as HTMLSelectElement).value;
@@ -42,6 +47,4 @@ export class AppComponent implements OnInit {
   isLightMode(): boolean {
     return document.documentElement.classList.contains('light-mode');
   }
-
-  title = 'mongodbweb.client';
 }

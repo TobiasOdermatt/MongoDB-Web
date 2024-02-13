@@ -1,0 +1,20 @@
+    <div class="modal-header">
+      <h5 class="modal-title">{{title}}</h5>
+      <button type="button" class="close btn-close blacktowhitetheme" aria-label="Close" (click)="onCloseModal()"></button>
+    </div>
+    <div class="modal-body">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Stat</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let key of jsonKeys">
+            <td>{{ key }}</td>
+            <td>{{ json[key] }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>

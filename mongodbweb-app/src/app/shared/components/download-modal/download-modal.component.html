@@ -1,0 +1,12 @@
+<div class="modal-header">
+    <h5 class="modal-title">Download</h5>
+    <button type="button" class="close btn-close blacktowhitetheme" aria-label="Close" (click)="onCloseModal()"></button>
+</div>
+<div class="modal-body">
+    <div class="progress">
+    <div class="progress-bar" role="progressbar" [style.width]="(downloadDatabaseInformation?.progress || 0) + '%'" [attr.aria-valuenow]="downloadDatabaseInformation?.progress" aria-valuemin="0" aria-valuemax="100"></div>
+    </div>
+    <p>{{downloadDatabaseInformation?.processedCollections}} / {{downloadDatabaseInformation?.totalCollections}} collections</p>
+    <p>Preparing the database for download...</p>
+    <p>Please wait, don't leave this site.</p>
+</div>
