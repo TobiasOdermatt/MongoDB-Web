@@ -42,4 +42,9 @@ export class ProgressService {
   public listenForDatabaseProgress(callback: (totalCollections: number, processedCollections: number, progress: number, guid: string, messageType: string) => void): void {
     this.hubConnection.on('ReceiveProgressDatabase', callback);
   }
+
+  public listenForProgress(callback: (totalMB: number, bytesReadMB: number, progress: number, guid: string, sizeType: string, messageType: string) => void): void {
+    this.hubConnection.on('ReceiveProgress', callback);
+  }
+
 }

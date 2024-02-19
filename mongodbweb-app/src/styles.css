@@ -90,7 +90,11 @@ html, body {
 }
 
 .modal-body {
-  background-color: var(--fifth-color);
+  background-color: var(--fifth-color) !important;
+}
+
+.modal-content {
+  background-color: var(--fifth-color) !important
 }
 
 .modal-footer {

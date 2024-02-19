@@ -599,6 +599,7 @@ namespace api.Helpers
             }
         }
 
+
         public async Task<bool> UpdateMongoDb(string dbName, string collectionName, Dictionary<string, object>? differences, Dictionary<string, string>? renameMap, string id)
         {
             try
@@ -642,6 +643,57 @@ namespace api.Helpers
             catch (Exception e)
             {
                 _logger.WriteLog(LogType.Error, $"User: {username} has failed to update DB: {dbName}, Collection: {collectionName} {e}");
+                return false;
+            }
+        }
+
+        public async Task<bool> UploadJSONAsync(string dbName, string collectionName, JToken json, bool adaptOid)
+        {
+            try
+            {
+                var db = client.GetDatabase(dbName);
+                var collection = db.GetCollection<BsonDocument>(collectionName);
+                List<BsonDocument> batch = new List<BsonDocument>();
+
+                if (json is JArray jsonArray)
+                {
+                    foreach (JObject jsonObject in jsonArray)
+                    {
+                        if (!adaptOid && jsonObject.ContainsKey("_id"))
+                        {
+                            jsonObject.Remove("_id");
+                        }
+
+                        var document = BsonDocument.Parse(jsonObject.ToString());
+                        batch.Add(document);
+
+                        if (batch.Count >= ConfigManager.batchCount)
+                        {
+                            await collection.InsertManyAsync(batch);
+                            batch.Clear();
+                        }
+                    }
+
+                    if (batch.Count > 0)
+                    {
+                        await collection.InsertManyAsync(batch);
+                    }
+                }
+                else
+                {
+                    JObject jobject = JObject.Parse(json.ToString());
+                    if (!adaptOid && jobject.ContainsKey("_id"))
+                    {
+                        jobject.Remove("_id");
+                    }
+
+                    var document = BsonDocument.Parse(jobject.ToString());
+                    await collection.InsertOneAsync(document);
+                }
+                return true;
+            }
+            catch
+            {
                 return false;
             }
         }

@@ -1,8 +1,9 @@
-import {inject } from '@angular/core';
+import { inject } from '@angular/core';
 import { CanActivateFn, Router, ActivatedRouteSnapshot, RouterStateSnapshot, UrlTree } from '@angular/router';
-import { map, catchError } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
+import { map, catchError, switchMap } from 'rxjs/operators';
 import { EnvService } from './env.service';
+import { v4 as uuidv4 } from 'uuid';
 
 export const canActivate: CanActivateFn = (
   next: ActivatedRouteSnapshot,
@@ -11,13 +12,25 @@ export const canActivate: CanActivateFn = (
   const envService = inject(EnvService);
   const router = inject(Router);
 
-  return envService.isAuthorized().pipe(
-    map(isAuthorized => {
-      if (!isAuthorized) {
-        return router.createUrlTree(['/login']);
+  return envService.useAuthorization().pipe(
+    switchMap(useAuthorization => {
+      if (!useAuthorization) {
+        envService.updateAuthorizationStatus(true);
+        if (!envService.isCookieSet()) {
+          const newGuid = uuidv4();
+          envService.setCookie('UUID', newGuid, 7); 
+        }
+        return of(true);
       }
-      envService.updateAuthorizationStatus(true);
-      return true;
+      return envService.isAuthorized().pipe(
+        map(isAuthorized => {
+          if (!isAuthorized) {
+            return router.createUrlTree(['/login']);
+          }
+          envService.updateAuthorizationStatus(true);
+          return true;
+        })
+      );
     }),
     catchError(() => of(router.createUrlTree(['/login'])))
   );

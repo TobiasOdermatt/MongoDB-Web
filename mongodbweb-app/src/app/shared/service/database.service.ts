@@ -139,7 +139,21 @@ export class DatabaseService {
       );
   }
 
-
+  checkDatabaseExistence(dbName: string): Observable<any> {
+    if (!dbName) {
+      console.error('Database name is required.');
+      this.toastr.error('Database name is required.');
+      return of({ success: false, message: 'Database name is required.' });
+    }
+    return this.http.get<any>(`api/Db/checkDatabaseExistence/${dbName}`)
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          console.error(`Error checking existence for database '${dbName}'`, error);
+          this.toastr.error(`Error checking existence for database '${dbName}'`);
+          return of({ exists: false, message: error.message, statusCode: error.status });
+        })
+      );
+  }
 
   safeMongoDBJsonParse(data: string): any {
     try {

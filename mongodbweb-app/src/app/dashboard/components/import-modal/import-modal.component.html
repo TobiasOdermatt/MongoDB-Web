@@ -3,12 +3,75 @@
     <button type="button" class="close btn-close blacktowhitetheme" (click)="closeModal.emit()" aria-label="Close"></button>
 </div>
 <div class="modal-body">
+  <div *ngIf="showUploadSection">
     <p>Ensure your file is in .json format before uploading.</p>
     <input type="file" #fileInput style="display: none" (change)="onFileSelected($event)" accept=".json" />
-    <div class="drop-area" (drop)="handleFileDrop($event)" (dragover)="onDragOver($event)" (click)="triggerFileInput(fileInput)">
-    <p class="file-name">{{ fileName ? fileName : ' Drop your file here for uploading or simply click this section to start.' }}</p>
+    <div class="drop-area" (drop)="handleFileDrop($event)" (dragover)="onDragOver($event)" (click)="triggerFileInput()">
+      <p class="file-name">{{ fileName ? fileName + " "+ fileSize + " MB" : ' Drop your file here for uploading or simply click this section to start.' }}</p>
     </div>
+  </div>
+
+  <div *ngIf="showProgressBar">
+    <h4>File {{progressInformation.progressType}}</h4>
+    <div class="progress mt-2">
+      <div class="progress-bar" role="progressbar" [style.width]="(progressInformation.progress || 0) + '%'" [attr.aria-valuenow]="progressInformation.progress" aria-valuemin="0" aria-valuemax="100"></div>
+    </div>
+    <div class="mt-2">
+      <p>{{progressInformation.processedMb | number:'1.2-2'}} / {{fileSize}} {{progressInformation.sizeType}}</p>
+    </div>
+    <div class="mt-2">
+      <p *ngIf="progressInformation.progressType == 'upload'">Uploading file on server</p>
+      <p *ngIf="progressInformation.progressType == 'process'">Proccessing file on server</p>
+      <p *ngIf="progressInformation.progressType == 'import'">Importing file to server <br /> this will take some time</p>
+    </div>
+  </div>
+
+  <div *ngIf="showUserSelectionSection">
+    <div class="mb-3">
+      <label for="Input" class="form-label">Database name</label>
+      <input type="text" class="form-control" id="Input" 
+      [(ngModel)]="databaseName" 
+      (ngModelChange)="handleDatabaseNameChange($event)">
+    </div>
+    <div class="mb-2">
+      <label class="form-label d-inline">
+        <span class="mr-2 ps-1 pe-1">Total:</span>
+        <span class="font-weight-bold">{{collectionsNames.length}} collections</span>
+      </label>
+      <label class="float-end">
+        <span>Size:</span>
+        <span class="font-weight-bold">{{fileSize + " " + progressInformation.sizeType}}</span>
+      </label>
+      <br>
+      <ul class="list-group page mt-2">
+        <li class="list-group-item page">
+          <input type="checkbox" id="selectAll" class="me-1" [(ngModel)]="selectAll" (change)="toggleSelectAll()" />
+          <label for="selectAll">{{ selectAll ? 'Unselect All' : 'Select All' }}</label>
+        </li>
+        <li *ngFor="let collection of collectionsNames; let i = index; trackBy: trackByFn" class="list-group-item page checkbox-area">
+          <div class="d-flex align-items-center">
+            <input type="checkbox" id="collection{{i}}"
+            [checked]="isChecked(collection)"
+            (change)="handleCheckboxChange(collection, $event)">
+            <input type="text" class="form-control editable-input" [(ngModel)]="collectionNameChanges[collectionsNames[i]]" />
+          </div>
+        </li>
+
+      </ul>
+      <br>
+      <label for="importSettings">Import settings:</label>
+      <ul class="list-group page mb-3 mt-2">
+        <li class="list-group-item page">
+          <input type="checkbox" id="adoptOldObjectId" class="me-1">
+          <label for="adoptOldObjectId">Adopt old object id</label>
+        </li>
+      </ul>
+    </div>
+    <p class="text-warning mt-3" *ngIf="databaseExistWarning">Attention: The database: {{databaseName}} currently exists. Modify the collection names if they are the same as the existing ones.</p>
+    <button type="submit" class="btn btn-primary">Select another .json file</button>
+  </div>
 </div>
-<div class="modal-footer">
-    <button type="button" class="btn btn-success"  [disabled]="!fileName">Next</button>
+<div class="modal-footer" *ngIf="showUploadSection||showUserSelectionSection">
+  <button type="button" *ngIf="showUploadSection" class="btn btn-success" [disabled]="!fileName" (click)="upload()">Next</button>
+  <button type="button" *ngIf="showUserSelectionSection" class="btn btn-success" [disabled]="!(checkedCollectionsNames.length > 0)" (click)="import()">Import</button>
 </div>

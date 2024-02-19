@@ -361,7 +361,7 @@ namespace api.Controllers
                 return BadRequest("Valid download GUID is required.");
 
             var fileName = $"db-{dbName}-{downloadGuid.ToString()[^4..]}.json";
-            var filePath = $"UserStorage/download/{mongoDbOperations.uuid}/{fileName}";
+            var filePath = $"UserStorage/downloads/{mongoDbOperations.uuid}/{fileName}";
 
             try
             {

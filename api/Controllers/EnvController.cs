@@ -8,21 +8,21 @@ namespace api.Controllers;
 [ApiController]
 public class EnvController
 {
-    [HttpGet("IsAdmin")]
+    [HttpGet("isAdmin")]
     [Authorization(IsRequiredAdmin = true)]
     public ActionResult<bool> IsAdmin()
     {
         return true;
     }
 
-    [HttpGet("IsAuthorized")]
+    [HttpGet("isAuthorized")]
     [Authorization]
     public ActionResult<bool> IsAuthorized()
     {
         return true;
     }
 
-    [HttpGet("IsAuthorizationEnabled")]
+    [HttpGet("isAuthorizationEnabled")]
     public ActionResult<bool> IsAuthorizationEnabled()
     {
         return ConfigManager.useAuthorization;

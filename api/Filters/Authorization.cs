@@ -36,7 +36,15 @@ namespace api.Filters
                 }
 
                 if (context.Controller is FileController fileController)
-                    fileController.userUUID = _uuid;
+                    fileController.uuid = _uuid;
+
+                if(context.Controller is FileProcessController fileProcessController && _mongoClient != null)
+                {
+                    fileProcessController.mongoDbOperations.client = _mongoClient;
+                    fileProcessController.mongoDbOperations.uuid = _uuid;
+                    fileProcessController.mongoDbOperations.username = _username;
+                    fileProcessController.uuid = _uuid;
+                }
 
                 await next();
             }
@@ -48,18 +56,22 @@ namespace api.Filters
 
         private bool ValidateConnection(HttpContext httpContext)
         {
+            var uuid = ReadUuidCookie(httpContext);
+
+            if (!Guid.TryParse(uuid, out Guid _))
+                return false;
+            else
+                _uuid = uuid;
+
             if (!ConfigManager.useAuthorization)
             {
-                DbConnector dBConnector = new();
                 _mongoClient = DbConnector.DbConnect(DbConnector.GetConnectionString("", ""));
                 return true;
             }
 
-            var (uuid, authOtp) = ReadOtpCookie(httpContext);
-            if (uuid is null || authOtp is null)
+            var authOtp = ReadOtpCookie(httpContext);
+            if (authOtp is null || uuid is null)
                 return false;
-
-            _uuid = uuid;
 
             var otpFile = OtpMemoryManagement.ReadOtp(uuid);
 
@@ -86,11 +98,14 @@ namespace api.Filters
             return connector.client != null;
         }
 
-        private static (string?, string?) ReadOtpCookie(HttpContext httpContext)
+        private static string? ReadOtpCookie(HttpContext httpContext)
         {
-            var uuid = httpContext.Request.Cookies["UUID"];
-            var authOtp = Base64Decode(httpContext.Request.Cookies["Token"]);
-            return (uuid, authOtp);
+            return Base64Decode(httpContext.Request.Cookies["Token"]);
+        }
+
+        private static string? ReadUuidCookie(HttpContext httpContext)
+        {
+            return httpContext.Request.Cookies["UUID"];
         }
 
         private static string? Base64Decode(string? base64EncodedData)

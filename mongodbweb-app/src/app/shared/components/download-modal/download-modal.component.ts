@@ -8,7 +8,6 @@ import { ProgressService } from '../../service/progress.service';
 })
 export class DownloadModalComponent {
   @Output() closeModal: EventEmitter<any> = new EventEmitter();
-  @Output() downloadConfirmed: EventEmitter<any> = new EventEmitter();
 
   downloadDatabaseInformation = { totalCollections: 0, processedCollections: 0, progress: 0, guid: '' };
   currentDownloadGuid: string;
@@ -30,10 +29,6 @@ export class DownloadModalComponent {
     if (this.currentDownloadGuid === guid && messageType === 'download') {
       this.downloadDatabaseInformation = { totalCollections, processedCollections, progress, guid };
     }
-  }
-
-  onConfirmDownload() {
-    this.downloadConfirmed.emit();
   }
 
   onCloseModal() {

@@ -96,7 +96,7 @@ export class DatabaseListComponent {
         if (response && response.success) {
           this.toastr.info('Collection created successfully');
           this.updateDatabaseListAndStats();
-        this.modalService.dismissAll();
+          this.modalService.dismissAll();
           }
         }
       });
@@ -106,7 +106,15 @@ export class DatabaseListComponent {
 
   
   openImport() {
-    const modalRef = this.modalService.open(ImportModalComponent, { centered: true })
+    const guid = uuidv4();
+    const modalRef = this.modalService.open(ImportModalComponent, { centered: true });
+    const importComponent: ImportModalComponent = modalRef.componentInstance as ImportModalComponent;
+    importComponent.currentImportGuid = guid;
+    importComponent.updatDbList.subscribe((event) => {
+      this.updateDatabaseListAndStats();
+      this.modalService.dismissAll();
+    });
+    this.subscribeToCloseModal(modalRef);
   }
 
   async openDownloadDatabase(dbName: string) {
