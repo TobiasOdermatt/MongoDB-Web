@@ -1,5 +1,7 @@
 import { Component, ViewEncapsulation } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Location } from '@angular/common';
+import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
+import { filter } from 'rxjs';
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
@@ -13,7 +15,7 @@ export class DashboardComponent {
   searchParam = {limit: 10, selectedKey: '', searchKeyword: '', currentPage: 1};
   downloadDatabaseInformation = { totalCollections: 0, processedCollections: 0, progress: 0, guid: '' };
 
-constructor(private activatedRoute: ActivatedRoute, private router: Router) { }
+  constructor(private activatedRoute: ActivatedRoute, private location: Location, private router: Router) { }
 
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe(params => {
@@ -31,28 +33,44 @@ constructor(private activatedRoute: ActivatedRoute, private router: Router) { }
         currentPage: params.get('currentPage') ? Number(params.get('currentPage')) : 1
       };
     });
+
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: NavigationEnd) => {
+      if (event.url === '/' || event.urlAfterRedirects === '/') {
+        this.resetToDefaultState();
+      }
+    });
   }
+
+  resetToDefaultState() {
+    this.selectedDbName = undefined;
+    this.selectedCollectionName = undefined;
+  }
+
 
   handleDatabaseClick(dbName: string) {
     this.selectedDbName = dbName;
-    this.router.navigate(['/db', dbName]);
+    this.location.replaceState(`/db/${dbName}`);
   }
 
   handleCollectionClick(click: any) {
     this.selectedCollectionName = click.collectionName;
     this.selectedDbName = click.dbName;
-    this.router.navigate(['/db', click.dbName, click.collectionName]);
+    this.location.replaceState(`/db/${click.dbName}/${click.collectionName}`);
   }
 
   handleDocumentSearch(search: any) {
-    const queryParams = {
-      currentPage: search.currentPage,
-      limit: search.limit,
+    const queryParams = new URLSearchParams({
+      currentPage: search.currentPage.toString(),
+      limit: search.limit.toString(),
       selectedKey: search.selectedKey,
       searchKeyword: search.searchKeyword
-    };
-    this.router.navigate(['/db', this.selectedDbName, this.selectedCollectionName], { queryParams });
+    }).toString();
+    const newPath = `/db/${this.selectedDbName}/${this.selectedCollectionName}?${queryParams}`;
+    this.location.replaceState(newPath);
   }
+
 
   checkIfDbIsSet() {
     return this.selectedDbName !== undefined;
