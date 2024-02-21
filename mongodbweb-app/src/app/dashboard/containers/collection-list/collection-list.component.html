@@ -1,0 +1,20 @@
+<div class="top-div">
+  <h3>List of all Collections</h3>
+  <p class="second-text-color">{{collectionList.length}} Collections found</p>
+  <button type="button" class="btn btn-primary float-end ms-3">Create collection</button>
+  <button type="button" class="btn btn-primary float-end" (click)="openImport()">Import</button>
+</div>
+<br>
+
+<div class="row mt-4">
+  <div *ngFor="let collection of collectionList" class="col-lg-4 col-xl-3 col-md-5 mb-8 col-sm-12 py-3">
+    <app-collection-card
+                 [dbName]="dbName"
+                 [collection]="collection"
+                 (downloadCollection)="openDownloadCollection($event)"
+                 (deleteCollection)="openDeleteCollection($event)"
+                 (detailCollection)="openDetailCollection($event)"
+                 (clickCollection)="clickCollection.emit($event)"
+                 ></app-collection-card>
+  </div>
+</div>

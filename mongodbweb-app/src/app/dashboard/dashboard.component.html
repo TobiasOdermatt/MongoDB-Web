@@ -1,5 +1,18 @@
-<app-database-list *ngIf="selectedCollection ==null">
+<app-database-list *ngIf="!checkIfDbIsSet()"
+  (databaseClick)="handleDatabaseClick($event)">
 </app-database-list>
 
-<app-collection-list *ngIf="selectedCollection !=null">
+<app-collection-list *ngIf="checkIfDbIsSet() && !checkIfCollectionIsSet()"
+  [dbName]="selectedDbName"
+  (clickCollection)="handleCollectionClick($event)">
 </app-collection-list>
+
+<app-document-list *ngIf="checkIfCollectionIsSet()"
+  [dbName]="selectedDbName"
+  [collectionName]="selectedCollectionName"
+  [itemsPerPage]="searchParam['limit']"
+  [selectedKey]="searchParam['selectedKey']"
+  [searchKeyword]="searchParam['searchKeyword']"
+  [currentPage]="searchParam['currentPage']"
+  (searchDocuments)="handleDocumentSearch($event)">
+</app-document-list>

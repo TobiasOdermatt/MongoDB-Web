@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
@@ -47,7 +47,7 @@ export class DatabaseService {
       );
   }
 
-  listCollections(dbName: string): Observable<any> {
+  getListCollections(dbName: string): Observable<any> {
     if (!dbName) {
       console.error('Database name is required for listing collections.');
       return of(null);
@@ -76,6 +76,24 @@ export class DatabaseService {
           console.error(`Error deleting database '${dbName}'`, error);
           this.toastr.error(`Error deleting database '${dbName}'`);
           return of({ success: false, message: `Error deleting database '${dbName}': ${error.message}`, statusCode: error.status });
+        })
+      );
+  }
+
+  deleteCollection(dbName: string, collectionName: string): Observable<any> {
+    if (!dbName || !collectionName) {
+      console.error('Database name and Collection name is required for deletion.');
+      return of({ success: false, message: 'Database name and collectionName is required.', statusCode: 400 });
+    }
+    return this.http.delete(`api/Db/deleteCollection/${dbName}/${collectionName}`, { observe: 'response', responseType: 'text' })
+      .pipe(
+        map(response => {
+          return { success: true, message: response.body, statusCode: response.status };
+        }),
+        catchError((error: HttpErrorResponse) => {
+          console.error(`Error deleting collection '${collectionName}'`, error);
+          this.toastr.error(`Error deleting collection '${collectionName}'`);
+          return of({ success: false, message: `Error deleting collection '${collectionName}': ${error.message}`, statusCode: error.status });
         })
       );
   }
@@ -139,6 +157,29 @@ export class DatabaseService {
       );
   }
 
+
+  prepareCollectionDownload(dbName: string, collectionName: string, downloadGuid: string): Observable<any> {
+    if (!dbName || !downloadGuid) {
+      console.error('Database name, collection name and download GUID are required.');
+      this.toastr.error('Database name, collection name and download GUID are required.');
+      return of(null);
+    }
+
+    const url = `api/Db/prepareCollectionDownload/${dbName}/${collectionName}/${downloadGuid}`;
+
+    return this.http.get(url, { responseType: 'text' })
+      .pipe(
+        map(fileName => {
+          return { success: true, fileName: fileName };
+        }),
+        catchError((error: HttpErrorResponse) => {
+          console.error(`Error preparing download for collection '${collectionName}'`, error);
+          this.toastr.error(`Error preparing download for collection '${collectionName}'`);
+          return of({ success: false, message: error.message, statusCode: error.status });
+        })
+      );
+  }
+
   checkDatabaseExistence(dbName: string): Observable<any> {
     if (!dbName) {
       console.error('Database name is required.');
@@ -154,6 +195,73 @@ export class DatabaseService {
         })
       );
   }
+
+  getTotalCount(dbName: string, collectionName: string, selectedKey?: string, searchValue?: string): Observable<any> {
+    let queryParams = new HttpParams();
+    if (selectedKey)
+        queryParams = queryParams.append('selectedKey', selectedKey);
+    if (searchValue)
+        queryParams = queryParams.append('searchValue', searchValue);
+
+    return this.http.get<any>(`api/Db/totalCount/${dbName}/${collectionName}`, { params: queryParams })
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          console.error(`Error fetching total count for collection '${collectionName}'`, error);
+          this.toastr.error(`Error fetching total count for collection '${collectionName}'`);
+          return of(null);
+        })
+      );
+  }
+
+  getPaginatedCollection(dbName: string, collectionName: string, skip: number, limit: number, selectedKey?: string, searchValue?: string): Observable<any> {
+    let queryParams = new HttpParams()
+      .append('skip', skip)
+      .append('limit', limit);
+    if (selectedKey) queryParams = queryParams.append('selectedKey', selectedKey);
+    if (searchValue) queryParams = queryParams.append('searchValue', searchValue);
+
+    return this.http.get<any>(`api/Db/getPaginatedCollection/${dbName}/${collectionName}`, { params: queryParams })
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          console.error(`Error fetching paginated collection data for '${collectionName}'`, error);
+          this.toastr.error(`Error fetching paginated collection data for '${collectionName}'`);
+          return of([]);
+        })
+      );
+  }
+
+  getCollectionCount(dbName: string, collectionName: string, selectedKey?: string, searchValue?: string): Observable<any> {
+    let queryParams = new HttpParams();
+    if (selectedKey) queryParams = queryParams.append('selectedKey', selectedKey);
+    if (searchValue) queryParams = queryParams.append('searchValue', searchValue);
+
+    return this.http.get<any>(`api/Db/collectionCount/${dbName}/${collectionName}`, { params: queryParams })
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          console.error(`Error fetching count for collection '${collectionName}'`, error);
+          this.toastr.error(`Error fetching count for collection '${collectionName}'`);
+          return of(null);
+        })
+      );
+  }
+
+  getCollectionAttributes(dbName: string, collectionName: string): Observable<any> {
+    if (!dbName || !collectionName) {
+      console.error('Database name and collection name are required.');
+      this.toastr.error('Database name and collection name are required.');
+      return of({ success: false, message: 'Database name and collection name are required.' });
+    }
+
+    return this.http.get<any>(`api/Db/collectionAttributes/${dbName}/${collectionName}`)
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          console.error(`Error fetching attributes for collection '${collectionName}' in database '${dbName}'`, error);
+          this.toastr.error(`Error fetching attributes for collection '${collectionName}' in database '${dbName}'`);
+          return of({ success: false, message: error.message, statusCode: error.status });
+        })
+      );
+  }
+
 
   safeMongoDBJsonParse(data: string): any {
     try {

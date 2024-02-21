@@ -2,27 +2,25 @@ import { Component, HostListener, ElementRef, Input, ViewChild, Output, EventEmi
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
-  selector: 'app-db-card',
-  templateUrl: './db-card.component.html',
-  styleUrl: './db-card.component.css'
+  selector: 'app-collection-card',
+  templateUrl: './collection-card.component.html',
+  styleUrl: './collection-card.component.css'
 })
-export class DbCardComponent {
-  @Input() db: any;
-  @Output() deleteDatabase: EventEmitter<string> = new EventEmitter();
-  @Output() downloadDatabase = new EventEmitter<string>();
-  @Output() detailDatabase = new EventEmitter<string>();
-  @Output() databaseClick = new EventEmitter<string>();
+export class CollectionCardComponent {
+  @Input() collection: any;
+  @Input() dbName: string;
+  @Output() deleteCollection: EventEmitter<string> = new EventEmitter();
+  @Output() downloadCollection = new EventEmitter<string>();
+  @Output() detailCollection = new EventEmitter<string>();
+  @Output() clickCollection = new EventEmitter<{ dbName: string, collectionName: string }>();
 
   statsKeys: string[] = [];
 
-  static currentlyOpen: DbCardComponent | null = null;
+  static currentlyOpen: CollectionCardComponent | null = null;
   public isDropdownOpen = false;
   @ViewChild('dropdownMenu', { static: false }) dropdownMenu: ElementRef;
 
   constructor(private eRef: ElementRef, private modalService: NgbModal) { }
-
-  ngOnInit() {
-  }
 
   @HostListener('document:click', ['$event'])
   clickOutside(event) {
@@ -35,14 +33,14 @@ export class DbCardComponent {
 
   toggleDropdown(event: MouseEvent) {
     event.stopPropagation();
-    if (DbCardComponent.currentlyOpen && DbCardComponent.currentlyOpen !== this) {
-      DbCardComponent.currentlyOpen.closeDropdown();
+    if (CollectionCardComponent.currentlyOpen && CollectionCardComponent.currentlyOpen !== this) {
+      CollectionCardComponent.currentlyOpen.closeDropdown();
     }
     this.isDropdownOpen = !this.isDropdownOpen;
     if (this.isDropdownOpen) {
-      DbCardComponent.currentlyOpen = this;
+      CollectionCardComponent.currentlyOpen = this;
     } else {
-      DbCardComponent.currentlyOpen = null;
+      CollectionCardComponent.currentlyOpen = null;
     }
   }
 
@@ -50,10 +48,5 @@ export class DbCardComponent {
     if (this.isDropdownOpen) {
       this.isDropdownOpen = false;
     }
-  }
-
-  isCriticalDatabase() {
-    let dbName = this.db['name'];
-    return dbName === 'admin' || dbName === 'config' || dbName === 'local';
   }
 }

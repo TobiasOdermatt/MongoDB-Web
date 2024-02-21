@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 import { DatabaseService } from '../../../shared/service/database.service';
 import { ToastrService } from 'ngx-toastr';
 import { DeleteModalComponent } from '../../../shared/components/delete-modal/delete-modal.component';
@@ -16,6 +16,7 @@ import { ImportModalComponent } from '../../components/import-modal/import-modal
   styleUrl: './database-list.component.css'
 })
 export class DatabaseListComponent {
+  @Output() databaseClick : EventEmitter<string> = new EventEmitter();
   databaseList: any[] = [];
 
   constructor(

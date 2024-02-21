@@ -116,6 +116,28 @@ namespace api.Tests.Controllers
         }
 
         [Test]
+        public void GetNumberOfDocuments_ReturnsOk_WithDocumentCount()
+        {
+            string dbName = "UnitTestDb";
+            string collectionName = "TestCollection";
+            TestSetup.GenerateTestDb();
+            var result = _dbController.GetNumberOfDocuments(dbName, collectionName) as ObjectResult;
+
+            Assert.That(result, Is.Not.Null);
+            if (result == null) return; 
+            Assert.That(result.StatusCode, Is.EqualTo(StatusCodes.Status200OK));
+
+            var resultValue = result.Value;
+            Assert.That(resultValue, Is.Not.Null);
+            var countProperty = resultValue?.GetType().GetProperty("count");
+            Assert.That(countProperty, Is.Not.Null, "The 'count' property should exist in the result value.");
+
+            var documentCount = (int)(countProperty?.GetValue(resultValue) ?? 0);
+            Assert.That(documentCount, Is.EqualTo(5), "Document count should be equal to the number of inserted documents.");
+        }
+
+
+        [Test]
         public void GetNumberOfCollections_ReturnsBadRequest_WithoutDatabaseName()
         {
             var result = _dbController.GetNumberOfCollections("") as ObjectResult;

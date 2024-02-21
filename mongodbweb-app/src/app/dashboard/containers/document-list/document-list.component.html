@@ -1,0 +1,69 @@
+<div class="top-div">
+  <h3>View Collection {{collectionName}}</h3>
+</div>
+<br>
+
+<ul class="navbar nav ml-auto search-box ms-1">
+  <li *ngIf="attributeKeyList.length > 0">
+    <select class="form-control-sm page" [(ngModel)]="selectedKey">
+      <option value="">All keys</option>
+      <option *ngFor="let key of attributeKeyList" [value]="key">{{key}}</option>
+    </select>
+  </li>
+
+  <li>
+    <input class="form-control form-control-sm page mx-1" type="text" placeholder="Search...." aria-label="Search..." [(ngModel)]="searchKeyword" name="searchKeyword">
+  </li>
+
+  <li>
+    <button type="submit" class="form-control page form-control-sm btn btn-default btn-sm mx-2" (click)="search()">
+      <span class="icon blacktowhitetheme" [innerHTML]="iconService.svgIcons['search']"></span>
+      Search
+    </button>
+  </li>
+
+  <li class="ms-auto mx-2">
+    <button type="submit" class="form-control page form-control-sm btn btn-default btn-sm">
+      <span class="icon blacktowhitetheme" [innerHTML]="iconService.svgIcons['settings']"></span>
+      Adjust collection
+    </button>
+  </li>
+
+  <li class="ms-2">
+    <button type="submit" class="form-control page form-control-sm btn btn-default btn-sm">
+      <span class="icon blacktowhitetheme" [innerHTML]="iconService.svgIcons['insert']"></span>
+      Insert collection
+    </button>
+  </li>
+</ul>
+<p class="second-text-color">{{documentsTotalCount}} Documents found</p>
+<input type="checkbox" [(ngModel)]="hideObjectId" class="checkbox-area" id="checkbox-hide-id">
+<label for="checkbox-hide-id">Hide ObjectId</label>
+
+<div class="row mt-2 mb-2">
+  <div *ngFor="let document of documentsList">
+    <app-document-textarea [document]="document"
+                           [dbName]="dbName"
+                           [collectionName]="collectionName"
+                           [hideObjectId]="hideObjectId"></app-document-textarea>
+    <app-document-content [document]="document"
+                           [dbName]="dbName"
+                           [collectionName]="collectionName"
+                           [hideObjectId]="hideObjectId"></app-document-content>
+  </div>
+</div>
+
+<nav>
+  <ul class="pagination">
+    <li class="page-item" [class.disabled]="isPreviousButtonDisabled()">
+      <a class="page-link" tabindex="-1" (click)="gotoPreviousPage()" [attr.disabled]="isPreviousButtonDisabled() ? true : null">Previous</a>
+    </li>
+    <li class="page-item" *ngFor="let page of pagesToShow; let i = index" [class.active]="currentPage === page">
+      <a class="page-link" (click)="goToPage(page)">{{ page }}</a>
+    </li>
+    <li class="page-item" [class.disabled]="isNextButtonDisabled()">
+      <a class="page-link" (click)="goToNextPage()" [attr.disabled]="isNextButtonDisabled() ? true : null">Next</a>
+    </li>
+  </ul>
+</nav>
+<p class="second-text-color">{{totalPages}} Pages found</p>

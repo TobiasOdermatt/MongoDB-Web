@@ -11,12 +11,12 @@ export class InfoJsonModalComponent {
   @Input() jsonKeys: string;
   @Input() title: string;
 
-  ngOnInit() {
-  console.log(this.json)
-  console.log(this.jsonKeys)
-  }
-
   onCloseModal() {
     this.closeModal.emit()
+  }
+
+  skipKey(key: string) {
+    let skipList = ["wiredTiger", "indexDetails", "indexSizes", "indexBuilds"];
+    return skipList.includes(key);
   }
 }

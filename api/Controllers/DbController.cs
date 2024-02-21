@@ -7,6 +7,7 @@ using api.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using api.Models;
 using api.Helpers;
+using Newtonsoft.Json;
 
 namespace api.Controllers
 {
@@ -62,6 +63,23 @@ namespace api.Controllers
             return Ok(new { count = collectionCount });
         }
 
+        [HttpGet("numberOfDocuments/{dbName}/{collectionName}")]
+        public IActionResult GetNumberOfDocuments(string dbName, string collectionName)
+        {
+            if (string.IsNullOrEmpty(dbName))
+                return BadRequest("Database name is required.");
+
+            if (string.IsNullOrEmpty(collectionName))
+                return BadRequest("Collection name is required.");
+
+            var documentCount = mongoDbOperations.GetNumberOfDocuments(dbName, collectionName);
+            if (documentCount == -1)
+                return Unauthorized("User is not authenticated or an error occurred.");
+
+            return Ok(new { count = documentCount });
+        }
+
+
         [HttpGet("getCollection/{dbName}/{collectionName}")]
         public IActionResult GetCollection(string dbName, string collectionName)
         {
@@ -114,7 +132,7 @@ namespace api.Controllers
         }
 
         [HttpGet("totalCount/{dbName}/{collectionName}")]
-        public IActionResult GetTotalCount(string dbName, string collectionName, [FromQuery] string selectedKey, [FromQuery] string searchValue)
+        public IActionResult GetTotalCount(string dbName, string collectionName, [FromQuery] string selectedKey = "", [FromQuery] string searchValue = "")
         {
             if (string.IsNullOrEmpty(dbName))
                 return BadRequest("Database name is required.");
@@ -128,7 +146,7 @@ namespace api.Controllers
         }
 
         [HttpGet("getPaginatedCollection/{dbName}/{collectionName}")]
-        public IActionResult GetPaginatedCollection(string dbName, string collectionName, [FromQuery] int skip, [FromQuery] int limit, [FromQuery] string selectedKey, [FromQuery] string searchValue)
+        public IActionResult GetPaginatedCollection(string dbName, string collectionName, [FromQuery] int skip, [FromQuery] int limit, [FromQuery] string selectedKey = "", [FromQuery] string searchValue = "")
         {
             if (string.IsNullOrEmpty(dbName))
                 return BadRequest("Database name is required.");
@@ -137,10 +155,16 @@ namespace api.Controllers
                 return BadRequest("Collection name is required.");
 
             var collectionData = mongoDbOperations.GetCollection(dbName, collectionName, skip, limit, selectedKey, searchValue);
-            if (!collectionData.Any())
-                return NotFound($"No data found in collection '{collectionName}' in database '{dbName}'.");
+            if (collectionData.Count == 0)
+                return Ok(new { documents = "" });
 
-            return Ok(new { data = collectionData });
+            var settings = new MongoDB.Bson.IO.JsonWriterSettings { OutputMode = MongoDB.Bson.IO.JsonOutputMode.CanonicalExtendedJson };
+
+            var jsonFriendlyData = collectionData.Select(document =>
+                document.ToJson(settings)
+            ).ToList();
+
+            return Ok(new { documents = jsonFriendlyData });
         }
 
         [HttpGet("collectionCount/{dbName}/{collectionName}")]
@@ -393,6 +417,53 @@ namespace api.Controllers
             catch (Exception)
             {
                 return StatusCode(500, "Failed to initiate database download.");
+            }
+        }
+
+        [HttpGet("prepareCollectionDownload/{dbName}/{collectionName}/{downloadGuid}")]
+        public async Task<IActionResult> PrepareCollectionDownload(string dbName, string collectionName, Guid downloadGuid)
+        {
+            if (string.IsNullOrEmpty(dbName))
+                return BadRequest("Database name is required.");
+            if (string.IsNullOrEmpty(collectionName))
+                return BadRequest("Collection name is required.");
+
+            if (downloadGuid == Guid.Empty)
+                return BadRequest("Valid download GUID is required.");
+
+            var fileName = $"collection-{collectionName}-{downloadGuid.ToString()[^4..]}.json";
+            var filePath = $"UserStorage/downloads/{mongoDbOperations.uuid}/{fileName}";
+
+            try
+            {
+                var directory = Path.GetDirectoryName(filePath);
+                if (directory == null)
+                    return StatusCode(500, "The path for the directory could not be determined.");
+
+                if (!Directory.Exists(directory))
+                    Directory.CreateDirectory(directory);
+                try
+                {
+                    using (var fileStream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None))
+                    {
+                        fileStream.Close();
+                    }
+
+                    using (var streamWriter = new StreamWriter(filePath))
+                    {
+                        await mongoDbOperations.StreamCollectionExport(streamWriter, dbName, collectionName, downloadGuid);
+                    }
+
+                    return Ok(fileName);
+                }
+                catch (IOException)
+                {
+                    return StatusCode(500, "The file is currently in use. Please try again later.");
+                }
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Failed to initiate collection download.");
             }
         }
 

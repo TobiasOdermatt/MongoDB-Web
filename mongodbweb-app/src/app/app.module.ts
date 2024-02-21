@@ -19,6 +19,10 @@ import { ImportModalComponent } from './dashboard/components/import-modal/import
 import { CollectionListComponent } from './dashboard/containers/collection-list/collection-list.component';
 import { CreateCollectionModalComponent } from './dashboard/components/create-collection-modal/create-collection-modal.component';
 import { InfoJsonModalComponent } from './dashboard/components/info-json-modal/info-json-modal.component';
+import { CollectionCardComponent } from './dashboard/components/collection-card/collection-card.component';
+import { DocumentListComponent } from './dashboard/containers/document-list/document-list.component';
+import { DocumentTextareaComponent } from './dashboard/components/document-textarea/document-textarea.component';
+import { DocumentContentComponent } from './dashboard/components/document-content/document-content.component';
 
 @NgModule({
   declarations: [
@@ -26,15 +30,20 @@ import { InfoJsonModalComponent } from './dashboard/components/info-json-modal/i
     LoginComponent,
     NavComponent,
     DashboardComponent,
+    CollectionCardComponent,
     DbCardComponent,
     GloablStatisticComponent,
     DatabaseListComponent,
     CollectionListComponent,
+    DocumentListComponent,
     DeleteModalComponent,
     DownloadModalComponent,
     ImportModalComponent,
     CreateCollectionModalComponent,
-    InfoJsonModalComponent
+    InfoJsonModalComponent,
+    DocumentListComponent,
+    DocumentTextareaComponent,
+    DocumentContentComponent
   ],
   imports: [
     BrowserModule, HttpClientModule, NgbModule, FormsModule, AppRoutingModule, BrowserAnimationsModule,

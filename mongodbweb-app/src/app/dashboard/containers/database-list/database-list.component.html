@@ -12,6 +12,7 @@
     [db]="db" 
     (deleteDatabase)="openDeleteDatabase($event)"
     (detailDatabase)="openDetailDatabase($event)"
+    (databaseClick)="databaseClick.emit($event)"
     (downloadDatabase)="openDownloadDatabase($event)"></app-db-card>
   </div>
 </div>

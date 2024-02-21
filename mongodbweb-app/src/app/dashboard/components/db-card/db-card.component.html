@@ -34,6 +34,6 @@
         </li>
       </ul>
     </div>
-    <a href="db/{{db['name']}}" class="btn actionbutton btn-primary">Open</a>
+    <button (click)="databaseClick.emit(db['name'])" class="btn actionbutton btn-primary">Open</button>
   </div>
 </div>
