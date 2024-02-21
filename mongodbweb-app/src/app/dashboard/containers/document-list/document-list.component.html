@@ -36,17 +36,15 @@
     </button>
   </li>
 </ul>
-<p class="second-text-color">{{documentsTotalCount}} Documents found</p>
-<input type="checkbox" [(ngModel)]="hideObjectId" class="checkbox-area" id="checkbox-hide-id">
-<label for="checkbox-hide-id">Hide ObjectId</label>
-
+<div class="ps-2">
+  <p class="second-text-color">{{documentsTotalCount}} Documents found</p>
+  <input type="checkbox" [(ngModel)]="hideObjectId" class="checkbox-area" id="checkbox-hide-id">
+  <label for="checkbox-hide-id" >Hide ObjectId</label>
+</div>
 <div class="row mt-2 mb-2">
   <div *ngFor="let document of documentsList">
-    <app-document-textarea [document]="document"
-                           [dbName]="dbName"
-                           [collectionName]="collectionName"
-                           [hideObjectId]="hideObjectId"></app-document-textarea>
-    <app-document-content [document]="document"
+    <app-document-content
+                           [document]="document"
                            [dbName]="dbName"
                            [collectionName]="collectionName"
                            [hideObjectId]="hideObjectId"></app-document-content>

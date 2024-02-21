@@ -21,7 +21,6 @@ import { CreateCollectionModalComponent } from './dashboard/components/create-co
 import { InfoJsonModalComponent } from './dashboard/components/info-json-modal/info-json-modal.component';
 import { CollectionCardComponent } from './dashboard/components/collection-card/collection-card.component';
 import { DocumentListComponent } from './dashboard/containers/document-list/document-list.component';
-import { DocumentTextareaComponent } from './dashboard/components/document-textarea/document-textarea.component';
 import { DocumentContentComponent } from './dashboard/components/document-content/document-content.component';
 
 @NgModule({
@@ -42,7 +41,6 @@ import { DocumentContentComponent } from './dashboard/components/document-conten
     CreateCollectionModalComponent,
     InfoJsonModalComponent,
     DocumentListComponent,
-    DocumentTextareaComponent,
     DocumentContentComponent
   ],
   imports: [
