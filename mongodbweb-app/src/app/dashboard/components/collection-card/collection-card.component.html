@@ -1,0 +1,36 @@
+<div class="shadow card h-100 rounded cardbox">
+  <div class="card-header py-1">
+    <div class="card-title">
+      <h4 class="title-card">{{collection['name']}}</h4>
+    </div>
+    <button type="button" class=" btn-close deleteicon blacktowhitetheme" aria-label="Close" (click)="deleteCollection.emit(collection['name'])"></button>
+  </div>
+  <div class="card-body">
+    <div class="card-text">
+    <div *ngIf="collection.info">
+      readOnly: {{collection.info.readOnly}} <br>
+    </div>
+    </div>
+  </div>
+
+  <div class="card-footer d-flex justify-content-between align-items-center">
+    <div class="btn-group">
+      <button type="button" class="btn btn-success actionbutton dropdown-toggle" aria-expanded="false" (click)="toggleDropdown($event)">
+        Option
+      </button>
+      <ul class="dropdown-menu element-background mt-5" [class.show]="isDropdownOpen" #dropdownMenu>
+        <li><a class="dropdown-item element-background" (click)="detailCollection.emit(collection['name'])">Details Collection</a></li>
+        <li><a class="dropdown-item element-background" href="#">Copy Collection</a></li>
+        <li><div class="dropdown-item element-background" (click)="downloadCollection.emit(collection.name)">Download Collection</div></li>
+
+        <li>
+          <hr class="dropdown-divider" />
+        </li>
+        <li>
+          <div class="dropdown-item text-danger" (click)="deleteCollection.emit(collection['name'])">Delete Collection</div>
+        </li>
+      </ul>
+    </div>
+    <button (click)="clickCollection.emit({collectionName: collection['name'], dbName: dbName})" class="btn actionbutton btn-primary">Open</button>
+  </div>
+</div>

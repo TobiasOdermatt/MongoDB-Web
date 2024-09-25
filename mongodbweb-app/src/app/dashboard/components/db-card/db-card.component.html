@@ -1,9 +1,9 @@
 <div class="shadow card h-100 rounded cardbox">
-  <div class="card-header py-1" [ngClass]="{'danger-background': db['name'] === 'admin' || db['name'] === 'config' || db['name'] === 'local'}">
+  <div class="card-header py-1" [ngClass]="{'danger-background': isCriticalDatabase()}">
     <div class="card-title">
       <h4 class="title-card">{{db['name']}}</h4>
     </div>
-    <button type="button" class=" btn-close deleteicon blacktowhitetheme" aria-label="Close" (click)="openModal(deleteConfirmationModal)"></button>
+    <button type="button" class=" btn-close deleteicon blacktowhitetheme" aria-label="Close" (click)="deleteDatabase.emit(db['name'])"></button>
   </div>
   <div class="card-body">
     <div class="card-text">
@@ -22,55 +22,18 @@
         Option
       </button>
       <ul class="dropdown-menu element-background mt-5" [class.show]="isDropdownOpen" #dropdownMenu>
-        <li><a class="dropdown-item element-background" (click)="openModal(detailModal)">Details DB</a></li>
+        <li><a class="dropdown-item element-background" (click)="detailDatabase.emit(db['name'])">Details DB</a></li>
         <li><a class="dropdown-item element-background" href="#">Copy DB</a></li>
-        <li><div class="dropdown-item element-background" (click)="downloadDatabase(db.name)">Download DB</div></li>
-        <li>
+        <li><div class="dropdown-item element-background" (click)="downloadDatabase.emit(db.name)">Download DB</div></li>
+
+        <li *ngIf="!isCriticalDatabase()">
           <hr class="dropdown-divider" />
         </li>
-        <li>
-          <div class="dropdown-item text-danger" (click)="openModal(deleteConfirmationModal)">Delete Database</div>
+        <li *ngIf="!isCriticalDatabase()">
+          <div class="dropdown-item text-danger" (click)="deleteDatabase.emit(db['name'])">Delete Database</div>
         </li>
       </ul>
     </div>
-    <a href="db/{{db['name']}}" class="btn actionbutton btn-primary">Open</a>
+    <button (click)="databaseClick.emit(db['name'])" class="btn actionbutton btn-primary">Open</button>
   </div>
 </div>
-
-<ng-template #detailModal let-modal>
-  <div class="modal-header">
-    <h5 class="modal-title">Database Details</h5>
-    <button type="button" class="close btn-close blacktowhitetheme" (click)="modal.dismiss('Cross click')" data-dismiss="modal" aria-label="Close"></button>
-  </div>
-  <div class="modal-body">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Stat</th>
-          <th>Value</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let key of statsKeys">
-          <td>{{ key }}</td>
-          <td>{{ db.stats[key] }}</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</ng-template>
-
-<ng-template #deleteConfirmationModal let-modal>
-  <div class="modal-header">
-    <h5 class="modal-title">Are you absolutely sure?</h5>
-    <button type="button" class="close btn-close blacktowhitetheme" (click)="modal.dismiss('Cross click')" data-dismiss="modal" aria-label="Close"></button>
-  </div>
-  <div class="modal-body">
-    <p>Warning: This action cannot be undone. <br /> This will permanently delete the <b>"{{db['name']}}" </b> database.</p>
-    <p>Please retype the database name to confirm.</p>
-    <input type="text" class="form-control" [(ngModel)]="typedDbName" placeholder="Database name">
-  </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-danger" [disabled]="typedDbName !== db['name']" (click)="deleteDatabase()">Delete</button>
-  </div>
-</ng-template>

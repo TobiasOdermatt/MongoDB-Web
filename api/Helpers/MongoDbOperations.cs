@@ -84,6 +84,28 @@ namespace api.Helpers
         }
 
         /// <summary>
+        /// Get the count of documents in a specified collection.
+        /// </summary>
+        /// <param name="dbName">The name of the database.</param>
+        /// <param name="collectionName">The name of the collection.</param>
+        /// <returns>The count of documents if successful, -1 if an error occurs.</returns>
+        public long GetNumberOfDocuments(string dbName, string collectionName)
+        {
+            try
+            {
+                var database = client.GetDatabase(dbName);
+                var collection = database.GetCollection<BsonDocument>(collectionName);
+                long count = collection.CountDocuments(new BsonDocument());
+                return count;
+            }
+            catch (Exception ex)
+            {
+                _logger.WriteLog(LogType.Error, $"User: {username} has failed to get the document count of {collectionName} in DB: {dbName}. Error: {ex.Message}");
+                return -1;
+            }
+        }
+
+        /// <summary>
         /// Get a specific Collection from a Database
         /// </summary>
         /// <param name="dbName">Database Name</param>
@@ -241,6 +263,7 @@ namespace api.Helpers
             var collection = database.GetCollection<BsonDocument>(collectionName);
             return (int)collection.CountDocuments(filter);
         }
+
 
         public async Task<bool> InsertDocumentAsync(string dbName, string collectionName, dynamic document)
         {
@@ -599,6 +622,55 @@ namespace api.Helpers
             }
         }
 
+        public async Task StreamCollectionExport(StreamWriter writer, string dbName, string collectionName, Guid guid)
+        {
+            try
+            {
+                var db = client.GetDatabase(dbName);
+                var collectionData = db.GetCollection<BsonDocument>(collectionName);
+                var filter = new BsonDocument();
+
+                await writer.WriteAsync($"{{\"{dbName}\":{{\"{collectionName}\": [");
+
+                var totalDocuments = await collectionData.CountDocumentsAsync(filter);
+                var processedDocuments = 0;
+
+                using (var cursor = collectionData.Find(filter).ToCursor())
+                {
+                    var jsonWriterSettings = new JsonWriterSettings { OutputMode = JsonOutputMode.CanonicalExtendedJson };
+                    bool isFirstDocument = true;
+                    var progress = 0;
+
+                    while (await cursor.MoveNextAsync())
+                    {
+                        foreach (var document in cursor.Current)
+                        {
+                            progress = (int)((double)processedDocuments / totalDocuments * 100);
+                            await _hubContext!.Clients.All.SendAsync("ReceiveProgressCollection", totalDocuments, processedDocuments, progress, guid.ToString(), "download");
+                            if (!isFirstDocument)
+                            {
+                                await writer.WriteAsync(",");
+                            }
+
+                            var documentJson = document.ToJson(jsonWriterSettings);
+                            await writer.WriteAsync(documentJson);
+
+                            isFirstDocument = false;
+                            processedDocuments++;
+                            progress = (int)((double)processedDocuments / totalDocuments * 100);
+                            await _hubContext!.Clients.All.SendAsync("ReceiveProgressCollection", totalDocuments, processedDocuments, progress, guid.ToString(), "download");
+                        }
+                    }
+                }
+
+                await writer.WriteAsync("]}}");
+            }
+            catch (Exception e)
+            {
+                LogManager _ = new LogManager(LogType.Error, $"User: {username} has failed to load the Collection: {collectionName} from DB: {dbName}", e);
+            }
+        }
+
         public async Task<bool> UpdateMongoDb(string dbName, string collectionName, Dictionary<string, object>? differences, Dictionary<string, string>? renameMap, string id)
         {
             try
@@ -642,6 +714,57 @@ namespace api.Helpers
             catch (Exception e)
             {
                 _logger.WriteLog(LogType.Error, $"User: {username} has failed to update DB: {dbName}, Collection: {collectionName} {e}");
+                return false;
+            }
+        }
+
+        public async Task<bool> UploadJSONAsync(string dbName, string collectionName, JToken json, bool adaptOid)
+        {
+            try
+            {
+                var db = client.GetDatabase(dbName);
+                var collection = db.GetCollection<BsonDocument>(collectionName);
+                List<BsonDocument> batch = new List<BsonDocument>();
+
+                if (json is JArray jsonArray)
+                {
+                    foreach (JObject jsonObject in jsonArray)
+                    {
+                        if (!adaptOid && jsonObject.ContainsKey("_id"))
+                        {
+                            jsonObject.Remove("_id");
+                        }
+
+                        var document = BsonDocument.Parse(jsonObject.ToString());
+                        batch.Add(document);
+
+                        if (batch.Count >= ConfigManager.batchCount)
+                        {
+                            await collection.InsertManyAsync(batch);
+                            batch.Clear();
+                        }
+                    }
+
+                    if (batch.Count > 0)
+                    {
+                        await collection.InsertManyAsync(batch);
+                    }
+                }
+                else
+                {
+                    JObject jobject = JObject.Parse(json.ToString());
+                    if (!adaptOid && jobject.ContainsKey("_id"))
+                    {
+                        jobject.Remove("_id");
+                    }
+
+                    var document = BsonDocument.Parse(jobject.ToString());
+                    await collection.InsertOneAsync(document);
+                }
+                return true;
+            }
+            catch
+            {
                 return false;
             }
         }

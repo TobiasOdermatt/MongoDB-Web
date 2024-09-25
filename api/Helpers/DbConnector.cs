@@ -1,6 +1,5 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
-using MongoDB.Driver.Core.Clusters;
 using static api.Helpers.LogManager;
 
 namespace api.Helpers
@@ -16,12 +15,23 @@ namespace api.Helpers
 
         public DbConnector() { }
 
-        public static MongoClient DbConnect(string connectionString)
+        public static MongoClient? DbConnect(string connectionString)
         {
-            return new MongoClient(connectionString);
+            MongoClient mongoClient = new(connectionString);
+            try
+            {
+                var connection = mongoClient.GetDatabase("pingTest").RunCommandAsync((Command<BsonDocument>)"{ping:1}")
+                    .Wait(1000);
+                return connection ? mongoClient : null;
+            }
+            catch (Exception e)
+            {
+                _ = new LogManager(LogType.Error, $"Connectin failed", e);
+                return null;
+            }
         }
 
-        private MongoClient? DbConnect(string username, string password, string ipOfRequest)
+        private static MongoClient? DbConnect(string username, string password, string ipOfRequest)
         {
             if (ConfigManager.allowedIp != "*" && ConfigManager.allowedIp != ipOfRequest)
             {
@@ -33,18 +43,12 @@ namespace api.Helpers
                 return null;
 
             var connectionString = GetConnectionString(username, password);
-            MongoClient mongoClient = new(connectionString);
-            try
-            {
-                var connection = mongoClient.GetDatabase("pingTest").RunCommandAsync((Command<BsonDocument>)"{ping:1}")
-                    .Wait(1000);
-                return connection ? mongoClient : null;
-            }
-            catch (Exception e)
-            {
-                _ = new LogManager(LogType.Error, $"User: {username} has failed to connect to the DB, IP: {ipOfRequest} with error: {e.Message}", e);
+            MongoClient? mongoClient = DbConnect(connectionString);
+            if(mongoClient == null) { 
+                _ = new LogManager(LogType.Error, $"User: {username} has failed to connect to the DB, IP: {ipOfRequest} ");
                 return null;
             }
+            return mongoClient;
         }
 
         public static string GetConnectionString(string username, string password)

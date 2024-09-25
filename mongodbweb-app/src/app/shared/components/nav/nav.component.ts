@@ -1,7 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { EnvService } from "../../service/env.service";
-import { HttpClient } from '@angular/common/http';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { IconService } from '../../service/icon.services';
 
 @Component({
   selector: 'app-nav',
@@ -13,17 +12,13 @@ export class NavComponent implements OnInit {
   isAdmin = false;
   isAuthorized = false;
 
-  svgIcons: { [key: string]: SafeHtml } = {};
-
   constructor(
-    private envService: EnvService,
-    private http: HttpClient,
-    private sanitizer: DomSanitizer
+    private envService: EnvService, public iconService: IconService,
   ) {}
 
   ngOnInit() {
     this.checkAuthorization();
-    this.loadSvgIcons();
+    this.updateNavDisplay();
   }
 
   checkAuthorization() {
@@ -35,23 +30,17 @@ export class NavComponent implements OnInit {
     });
   }
 
-  Collapse() {
-    this.showNav = !this.showNav;
+  @HostListener('window:resize', ['$event'])
+  onResize(event) {
+    this.updateNavDisplay();
   }
 
-  loadSvgIcons() {
-    const icons = ['home', 'query', 'pie_chart', 'user_control', 'security', 'settings', 'logout'];
-    icons.forEach(icon => {
-      const cachedIcon = localStorage.getItem(`svg-${icon}`);
-      if (cachedIcon) {
-        this.svgIcons[icon] = this.sanitizer.bypassSecurityTrustHtml(cachedIcon);
-      } else {
-        this.http.get(`assets/icons/${icon}.svg`, { responseType: 'text' })
-          .subscribe(svgContent => {
-            localStorage.setItem(`svg-${icon}`, svgContent);
-            this.svgIcons[icon] = this.sanitizer.bypassSecurityTrustHtml(svgContent);
-          });
-      }
-    });
+  updateNavDisplay() {
+    this.showNav = window.innerWidth > 641;
+  }
+
+
+  Collapse() {
+    this.showNav = !this.showNav;
   }
 }

@@ -1,0 +1,37 @@
+.navbar {
+  display: flex;
+  align-items: center;
+}
+
+.navbar li {
+  display: flex;
+  align-items: center;
+}
+
+.form-control, .form-control-sm, .btn, .btn-sm {
+  height: 2.0em;
+}
+
+select.form-control-sm, input.form-control-sm {
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+}
+
+::placeholder {
+  color: var(--secound-text-color);
+}
+
+.btn-default {
+    border-color: var(--font-color);
+}
+
+.page-item {
+  cursor: pointer;
+  user-select: none;
+}
+
+.page-link {
+  background-color: var(--fifth-color);
+  color: var(--font-color);
+  user-select: none;
+}

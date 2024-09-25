@@ -1,7 +1,3 @@
 .second-text-color{
     color: var(--secound-text-color);
 }
-
-::placeholder {
-  color: var(--secound-text-color);
-}

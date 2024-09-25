@@ -76,6 +76,7 @@ html, body {
 .dropdown-item:hover {
   background-color: var(--secound-color) !important;
   color: var(--font-color) !important;
+  cursor: pointer;
 }
 
 .modal-content {
@@ -89,7 +90,11 @@ html, body {
 }
 
 .modal-body {
-  background-color: var(--fifth-color);
+  background-color: var(--fifth-color) !important;
+}
+
+.modal-content {
+  background-color: var(--fifth-color) !important
 }
 
 .modal-footer {

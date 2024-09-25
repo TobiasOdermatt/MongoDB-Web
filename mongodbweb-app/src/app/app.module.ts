@@ -12,6 +12,16 @@ import { DbCardComponent } from './dashboard/components/db-card/db-card.componen
 import { GloablStatisticComponent } from './gloabl-statistic/gloabl-statistic.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ToastrModule } from 'ngx-toastr';
+import { DatabaseListComponent } from './dashboard/containers/database-list/database-list.component';
+import { DeleteModalComponent } from './shared/components/delete-modal/delete-modal.component';
+import { DownloadModalComponent } from './shared/components/download-modal/download-modal.component';
+import { ImportModalComponent } from './dashboard/components/import-modal/import-modal.component';
+import { CollectionListComponent } from './dashboard/containers/collection-list/collection-list.component';
+import { CreateCollectionModalComponent } from './dashboard/components/create-collection-modal/create-collection-modal.component';
+import { InfoJsonModalComponent } from './dashboard/components/info-json-modal/info-json-modal.component';
+import { CollectionCardComponent } from './dashboard/components/collection-card/collection-card.component';
+import { DocumentListComponent } from './dashboard/containers/document-list/document-list.component';
+import { DocumentContentComponent } from './dashboard/components/document-content/document-content.component';
 
 @NgModule({
   declarations: [
@@ -19,8 +29,19 @@ import { ToastrModule } from 'ngx-toastr';
     LoginComponent,
     NavComponent,
     DashboardComponent,
+    CollectionCardComponent,
     DbCardComponent,
-    GloablStatisticComponent
+    GloablStatisticComponent,
+    DatabaseListComponent,
+    CollectionListComponent,
+    DocumentListComponent,
+    DeleteModalComponent,
+    DownloadModalComponent,
+    ImportModalComponent,
+    CreateCollectionModalComponent,
+    InfoJsonModalComponent,
+    DocumentListComponent,
+    DocumentContentComponent
   ],
   imports: [
     BrowserModule, HttpClientModule, NgbModule, FormsModule, AppRoutingModule, BrowserAnimationsModule,

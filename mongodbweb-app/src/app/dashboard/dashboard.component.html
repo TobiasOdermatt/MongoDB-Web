@@ -1,46 +1,18 @@
-<div class="top-div">
-  <h3>List of all databases</h3>
-  <p class="second-text-color">{{databaseList.length}} Databases found</p>
-  <button type="button" class="btn btn-primary float-end ms-3" (click)="openModal(createCollectionModal)">Create database</button>
-  <button type="button" class="btn btn-primary float-end">Import</button>
-</div>
-<br>
+<app-database-list *ngIf="!checkIfDbIsSet()"
+  (databaseClick)="handleDatabaseClick($event)">
+</app-database-list>
 
-<div class="row mt-4">
-  <div *ngFor="let db of databaseList" class="col-lg-4 col-xl-3 col-md-5 mb-8 col-sm-12 py-3">
-    <app-db-card [db]="db" (downloadRequest)="handleDownloadRequest($event)" (updateDatabases)="updateDatabaseListAndStats()"></app-db-card>
-  </div>
-</div>
+<app-collection-list *ngIf="checkIfDbIsSet() && !checkIfCollectionIsSet()"
+  [dbName]="selectedDbName"
+  (clickCollection)="handleCollectionClick($event)">
+</app-collection-list>
 
-<ng-template #createCollectionModal let-modal>
-  <div class="modal-header">
-    <h5 class="modal-title">Create new collection</h5>
-    <button type="button" class="close btn-close blacktowhitetheme" (click)="modal.dismiss('Cross click')" data-dismiss="modal" aria-label="Close"></button>
-  </div>
-  <div class="modal-body">
-    <p> Please type the database name</p>
-    <input type="text" class="form-control page" placeholder="database name" required [(ngModel)]="newDbName">
-    <br>
-    <p> Please type the collection name</p>
-    <input type="text" class="form-control page" placeholder="collection name" required [(ngModel)]="newCollectionName">
-  </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-success" (click)="createCollection()" [disabled]="newDbName===''||newCollectionName===''">Create collection</button>
-  </div>
-</ng-template>
-
-<ng-template #downloadModal let-modal>
-  <div class="modal-header">
-    <h5 class="modal-title">Download</h5>
-    <button type="button" class="close btn-close blacktowhitetheme" (click)="modal.dismiss('Cross click')" data-dismiss="modal" aria-label="Close"></button>
-  </div>
-  <div class="modal-body">
-    <div class="progress">
-      <div class="progress-bar" role="progressbar" [style.width]="(downloadInformation?.progress || 0) + '%'" [attr.aria-valuenow]="downloadInformation?.progress" aria-valuemin="0" aria-valuemax="100"></div>
-    </div>
-    <p>{{downloadInformation?.processedCollections}} / {{downloadInformation?.totalCollections}} collections</p>
-    <p>Preparing the database for download...</p>
-    <p>Please wait, don't leave this site.</p>
-  </div>
-</ng-template>
-
+<app-document-list *ngIf="checkIfCollectionIsSet()"
+  [dbName]="selectedDbName"
+  [collectionName]="selectedCollectionName"
+  [itemsPerPage]="searchParam['limit']"
+  [selectedKey]="searchParam['selectedKey']"
+  [searchKeyword]="searchParam['searchKeyword']"
+  [currentPage]="searchParam['currentPage']"
+  (searchDocuments)="handleDocumentSearch($event)">
+</app-document-list>

@@ -12,38 +12,38 @@
     <nav class="flex-column">
       <div class="nav-item px-3">
         <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">
-          <div class="icon blacktowhite" [innerHTML]="svgIcons['home']"></div> Home
+          <div class="icon blacktowhite" [innerHTML]="iconService.svgIcons['home']"></div> Home
         </a>
       </div>
       <ng-container *ngIf="isAuthorized">
         <div class="nav-item px-3" *ngIf="isAdmin">
           <a routerLink="/Query" routerLinkActive="active" class="nav-link">
-            <div class="icon" [innerHTML]="svgIcons['query']"></div> Query
+            <div class="icon" [innerHTML]="iconService.svgIcons['query']"></div> Query
           </a>
         </div>
         <div class="nav-item px-3">
           <a routerLink="/statistic" routerLinkActive="active" class="nav-link">
-            <div class="icon blacktowhite" [innerHTML]="svgIcons['pie_chart']"></div> Statistic
+            <div class="icon blacktowhite" [innerHTML]="iconService.svgIcons['pie_chart']"></div> Statistic
           </a>
         </div>
         <div class="nav-item px-3" *ngIf="isAdmin">
           <a routerLink="User_session_control" routerLinkActive="active" class="nav-link">
-            <div class="icon blacktowhite" [innerHTML]="svgIcons['user_control']"></div> User session control
+            <div class="icon blacktowhite" [innerHTML]="iconService.svgIcons['user_control']"></div> User session control
           </a>
         </div>
         <div class="nav-item px-3" *ngIf="isAdmin">
           <a routerLink="Access_log" routerLinkActive="active" class="nav-link">
-            <div class="icon blacktowhite" [innerHTML]="svgIcons['security']"></div> Access Log
+            <div class="icon blacktowhite" [innerHTML]="iconService.svgIcons['security']"></div> Access Log
           </a>
         </div>
         <div class="nav-item px-3">
           <a routerLink="Settings" routerLinkActive="active" class="nav-link">
-            <div class="icon blacktowhite" [innerHTML]="svgIcons['settings']"></div> Settings
+            <div class="icon blacktowhite" [innerHTML]="iconService.svgIcons['settings']"></div> Settings
           </a>
         </div>
         <div class="nav-item px-3">
-          <a routerLink="api/Auth/Logout" routerLinkActive="active" class="nav-link">
-            <div class="icon blacktowhite" [innerHTML]="svgIcons['logout']"></div> Logout
+          <a href="api/Auth/Logout">
+            <div class="icon blacktowhite" [innerHTML]="iconService.svgIcons['logout']"></div> Logout
           </a>
         </div>
       </ng-container>

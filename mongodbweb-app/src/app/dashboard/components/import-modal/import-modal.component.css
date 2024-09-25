@@ -1,0 +1,25 @@
+.drop-area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px dashed var(--font-color);
+    padding: 80px;
+    cursor: pointer;
+  }
+
+.checkbox-area {
+  padding-left: 30px;
+}
+
+.list-group-item{
+    border: unset !important;
+}
+
+.editable-input {
+  border-top-style: hidden;
+  border-right-style: hidden;
+  border-left-style: hidden;
+  border-bottom-style: groove;
+  border-color: var(--secound-color);
+  margin-left: 10px;
+}
