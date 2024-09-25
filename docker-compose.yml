@@ -11,6 +11,8 @@ services:
     depends_on:
       - mongodbweb-app
     container_name: api
+    networks:
+      - test
 
 
   mongodbweb-app:
@@ -20,3 +22,13 @@ services:
     ports:
       - "4200:4200"
     container_name: app
+    networks:
+      - test
+    dns:
+      - 127.0.0.11
+
+networks:
+  test:
+    external: true
+    name: test
+    driver: bridge
